@@ -1,8 +1,8 @@
 import { ChakraProvider, Box, Container } from "@chakra-ui/react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-// import EditDocument from "./pages/EditDocument";
-// import CreateDocument from "./pages/CreateDocument";
+import CreateDocument from "./pages/CreateDocument";
+import EditDocument from "./pages/EditDocument";
 
 function App() {
   return (
@@ -12,8 +12,8 @@ function App() {
           <Container maxW="container.md" py={5}>
             <Routes>
               <Route path="/" element={<Home />} />
-              {/* <Route path="/new" element={<CreateDocument />} />
-              <Route path="/edit/:id" element={<EditDocument />} /> */}
+              <Route path="/new" element={<CreateDocument />} />
+              <Route path="/edit/:id" element={<EditDocument />} /> 
             </Routes>
           </Container>
         </Box>
