@@ -2,7 +2,7 @@
   "name": "jsramverk-editor",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://www.student.bth.se/~momr21/editor/",
+  "homepage": "momr21/editor/",
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
