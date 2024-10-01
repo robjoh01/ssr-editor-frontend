@@ -1,128 +1,193 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { fetchDocument, updateDocument, deleteDocument } from "../api"
+
 import {
-  Button,
-  Input,
-  Textarea,
-  FormControl,
-  FormLabel,
-  Checkbox,
-  Heading,
-  Spinner,
-  Alert,
-  AlertIcon,
-} from "@chakra-ui/react";
-import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+    Box,
+    Link,
+    Button,
+    Heading,
+    FormControl,
+    FormLabel,
+    Input,
+    Textarea,
+    Checkbox,
+    Spinner,
+    Alert,
+    AlertIcon,
+} from "@chakra-ui/react"
 
 const EditDocument = () => {
-  const navigate = useNavigate();
-  const { id } = useParams(); // Get the document ID from URL params
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [ownerId, setOwnerId] = useState("");
-  const [isLocked, setIsLocked] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const navigate = useNavigate()
+    const { id } = useParams() // Get the document ID from URL params
 
-  useEffect(() => {
-    const fetchDocument = async () => {
-      setLoading(true);
-      setError(null); // Reset error state
-      try {
-        const response = await axios.get(`http://localhost:1337/api/document/${id}`);
-        const { title, content, ownerId, isLocked } = response.data;
+    const [title, setTitle] = useState("")
+    const [content, setContent] = useState("")
+    const [ownerId, setOwnerId] = useState("")
+    const [isLocked, setIsLocked] = useState(false)
 
-        // Set the state with the fetched data
-        setTitle(title);
-        setContent(content);
-        setOwnerId(ownerId);
-        setIsLocked(isLocked);
-      } catch (err) {
-        console.error("Error fetching document:", err);
-        setError("Failed to fetch document. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Query to fetch the document
+    const {
+        data: document,
+        isLoading: isFetchingDocument,
+        error: fetchError,
+    } = useQuery({
+        queryKey: ["document", id],
+        queryFn: () => fetchDocument(id),
+        enabled: !!id, // Only run query if id is available
+    })
 
-    fetchDocument();
-  }, [id]);
+    useEffect(() => {
+        if (document) {
+            setTitle(document.title)
+            setContent(document.content)
+            setOwnerId(document.ownerId)
+            setIsLocked(document.isLocked)
+        }
+    }, [document])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const data1 = { title, content, ownerId, isLocked };
+    // Mutation for updating the document
+    const {
+        mutate: updateMutate,
+        isPending: isUpdating,
+        isError: isUpdateError,
+        error: updateError,
+    } = useMutation({
+        mutationFn: (data) => updateDocument(data),
+        onSuccess: () => {
+            console.log("Document updated successfully")
+            // Optionally navigate or show a success message
+        },
+        onError: (err) => {
+            console.error("Error updating document:", err)
+        },
+    })
 
-    try {
-        await axios.put(`http://localhost:1337/api/document/${id}`, data1);
-        navigate("/");
-    } catch (err) {
-      console.error("Error updating document:", err);
-      setError("Failed to update document. Please try again.");
+    // Mutation for deleting the document
+    const {
+        mutate: deleteMutate,
+        isPending: isDeleting,
+        isError: isDeleteError,
+        error: deleteError,
+    } = useMutation({
+        mutationFn: () => deleteDocument(id),
+        onSuccess: () => {
+            console.log("Document deleted successfully")
+            navigate("/")
+        },
+        onError: (err) => {
+            console.error("Error deleting document:", err)
+        },
+    })
+
+    // Handle form submission
+    const handleSubmit = (e) => {
+        e.preventDefault()
+
+        const documentData = { title, content, ownerId, isLocked }
+
+        // Trigger the mutation with the document ID and the new data
+        updateMutate({ id, document: documentData })
     }
-  };
 
-  // Show loading spinner while fetching
-  if (loading) return <Spinner size="xl" />;
+    // Loading state for both fetching and mutation
+    if (isFetchingDocument || isUpdating || isDeleting) {
+        return <Spinner size="xl" />
+    }
 
-  // Display error message if there's an error
-  if (error) {
+    if (fetchError)
+        return (
+            <div>
+                Error: {fetchError.message || "Failed to fetch document."}
+            </div>
+        )
+
     return (
-      <Alert status="error">
-        <AlertIcon />
-        {error}
-      </Alert>
-    );
-  }
+        <>
+            <Heading as="h1" size="xl" mb={4}>
+                Redigera Dokument
+            </Heading>
+            <form onSubmit={handleSubmit}>
+                <FormControl mb={4}>
+                    <FormLabel>Dokument Titel</FormLabel>
+                    <Input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Skriv dokumentets titel"
+                        required
+                    />
+                </FormControl>
 
-  return (
-    <>
-      <Heading as="h1" size="xl" mb={4}>Redigera Dokument</Heading>
-      <form onSubmit={handleSubmit}>
-        <FormControl mb={4}>
-          <FormLabel>Dokument Titel</FormLabel>
-          <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Skriv dokumentets titel"
-            required
-          />
-        </FormControl>
+                <FormControl mb={4}>
+                    <FormLabel>Dokument Innehåll</FormLabel>
+                    <Textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Skriv innehållet för dokumentet"
+                        required
+                    />
+                </FormControl>
 
-        <FormControl mb={4}>
-          <FormLabel>Dokument Innehåll</FormLabel>
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Skriv innehållet för dokumentet"
-            required
-          />
-        </FormControl>
+                <FormControl mb={4}>
+                    <FormLabel>ID av Ägare</FormLabel>
+                    <Input
+                        type="text"
+                        value={ownerId}
+                        onChange={(e) => setOwnerId(e.target.value)}
+                        placeholder="Skriv ägarens ID"
+                        required
+                    />
+                </FormControl>
 
-        <FormControl mb={4}>
-          <FormLabel>ID av Ägare</FormLabel>
-          <Input
-            type="text"
-            value={ownerId}
-            onChange={(e) => setOwnerId(e.target.value)}
-            placeholder="Skriv ägarens ID"
-            required
-          />
-        </FormControl>
+                <FormControl mb={4}>
+                    <Checkbox
+                        isChecked={isLocked}
+                        onChange={(e) => setIsLocked(e.target.checked)}
+                    >
+                        Låst dokument
+                    </Checkbox>
+                </FormControl>
 
-        <FormControl mb={4}>
-          <Checkbox
-            isChecked={isLocked}
-            onChange={(e) => setIsLocked(e.target.checked)}
-          >
-            Låst dokument
-          </Checkbox>
-        </FormControl>
+                <Box mb={4} display="flex" gap={4}>
+                    <Button
+                        colorScheme="teal"
+                        type="submit"
+                        isLoading={isUpdating}
+                    >
+                        Uppdatera
+                    </Button>
 
-        <Button colorScheme="teal" type="submit">Uppdatera</Button>
-      </form>
-    </>
-  );
-};
+                    <Link href="/" variant="ghost">
+                        <Button colorScheme="orange">Tillbaka</Button>
+                    </Link>
 
-export default EditDocument;
+                    <Button
+                        colorScheme="red"
+                        ml={4}
+                        onClick={() => deleteMutate()}
+                        isLoading={isDeleting}
+                    >
+                        Ta bort
+                    </Button>
+                </Box>
+
+                {isUpdateError && (
+                    <Alert status="error" mt={4}>
+                        <AlertIcon />
+                        {updateError.message || "Failed to update document."}
+                    </Alert>
+                )}
+                {isDeleteError && (
+                    <Alert status="error" mt={4}>
+                        <AlertIcon />
+                        {deleteError.message || "Failed to delete document."}
+                    </Alert>
+                )}
+            </form>
+        </>
+    )
+}
+
+export default EditDocument
