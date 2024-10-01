@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import { createDocument } from "../api"
 
 import {
+    Box,
     Heading,
     FormControl,
     FormLabel,
@@ -97,13 +98,19 @@ const CreateDocument = () => {
                     </Checkbox>
                 </FormControl>
 
-                <Button
-                    colorScheme="teal"
-                    type="submit"
-                    isLoading={mutation.isLoading}
-                >
-                    Spara
-                </Button>
+                <Box mb={4} display="flex" gap={4}>
+                    <Button
+                        colorScheme="teal"
+                        type="submit"
+                        isLoading={mutation.isLoading}
+                    >
+                        Spara
+                    </Button>
+
+                    <Button colorScheme="orange" as={Link} to="/">
+                        Tillbaka
+                    </Button>
+                </Box>
 
                 {error && (
                     <Alert status="error" mt={4}>

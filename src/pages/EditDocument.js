@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { fetchDocument, updateDocument, deleteDocument } from "../api"
 
 import {
     Box,
-    Link,
     Button,
     Heading,
     FormControl,
@@ -39,6 +38,8 @@ const EditDocument = () => {
     })
 
     useEffect(() => {
+        // TODO: Check if document is alive, otherwise navigate to 404
+
         if (document) {
             setTitle(document.title)
             setContent(document.content)
@@ -159,9 +160,9 @@ const EditDocument = () => {
                         Uppdatera
                     </Button>
 
-                    <Link href="/" variant="ghost">
-                        <Button colorScheme="orange">Tillbaka</Button>
-                    </Link>
+                    <Button colorScheme="orange" as={Link} to="/">
+                        Tillbaka
+                    </Button>
 
                     <Button
                         colorScheme="red"
