@@ -51,6 +51,11 @@
     "jest": {
         "transformIgnorePatterns": [
             "/node_modules/(?!(axios)/)"
+        ],
+        "coverageReporters": [
+            "json",
+            "json-summary",
+            "html"
         ]
     },
     "devDependencies": {

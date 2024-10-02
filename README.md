@@ -65,5 +65,12 @@ SSR-Editor is a real-time web application for creating and editing documents col
    npm audit
    ```
 
+## Testing
+
+1. To run GUI tests:
+   ```bash
+   npm run test
+   ```
+
 > [!NOTE]
 > If you are on WSL, you might need to run `npx expose-wsl@latest` to expose the WSL port.

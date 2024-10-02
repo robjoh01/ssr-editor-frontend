@@ -6,6 +6,13 @@ export default [
     { files: ["**/*.{js,mjs,cjs,jsx}"] },
     { files: ["**/*.js"], languageOptions: { sourceType: "module" } },
     {
+        settings: {
+            react: {
+                version: "detect",
+            },
+        },
+    },
+    {
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -32,7 +39,7 @@ export default [
             "build/**/*",
             "*.chunk.js",
             "*.min.js",
-            "**/*.test.js",
+            "**/*.test.{js,mjs,cjs,jsx}",
             "coverage/**/*",
         ],
     },
