@@ -35,16 +35,19 @@ SSR-Editor is a real-time web application for creating and editing documents col
    - **.env.development**:
      ```
      REACT_APP_API_URL=http://localhost:1338/api  # Backend URL with port
+     REACT_APP_BASENAME="" # Basename for Router
      ```
 
    - **.env.production**:
      ```
      REACT_APP_API_URL=<your_production_url>  # Backend URL for production
+     REACT_APP_BASENAME="~<your_acronym>/editor" # Basename for Router
      ```
 
    - **.env (optional)**: You can create this file to set the `PORT` for the frontend application:
      ```
      PORT=3000  # Port for the frontend application
+     REACT_APP_DEPLOY_USER=<your_acronym> # BTH acronym user for deploying
      ```
 
 3. To launch the application in development mode, use:
