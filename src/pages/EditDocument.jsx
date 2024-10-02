@@ -4,6 +4,8 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { fetchDocument, updateDocument, deleteDocument } from "../api"
 
 import {
+    Flex,
+    Skeleton,
     Box,
     Button,
     Heading,
@@ -35,11 +37,11 @@ const EditDocument = () => {
         queryKey: ["document", id],
         queryFn: () => fetchDocument(id),
         enabled: !!id, // Only run query if id is available
+        select: (response) => response.data,
     })
 
     useEffect(() => {
         // TODO: Check if document is alive, otherwise navigate to 404
-
         if (document) {
             setTitle(document.title)
             setContent(document.content)
@@ -51,24 +53,20 @@ const EditDocument = () => {
     // Mutation for updating the document
     const {
         mutate: updateMutate,
-        isPending: isUpdating,
+        isLoading: isUpdating,
         isError: isUpdateError,
         error: updateError,
     } = useMutation({
         mutationFn: (data) => updateDocument(data),
         onSuccess: () => {
             console.log("Document updated successfully")
-            // Optionally navigate or show a success message
-        },
-        onError: (err) => {
-            console.error("Error updating document:", err)
         },
     })
 
     // Mutation for deleting the document
     const {
         mutate: deleteMutate,
-        isPending: isDeleting,
+        isLoading: isDeleting,
         isError: isDeleteError,
         error: deleteError,
     } = useMutation({
@@ -77,32 +75,32 @@ const EditDocument = () => {
             console.log("Document deleted successfully")
             navigate("/")
         },
-        onError: (err) => {
-            console.error("Error deleting document:", err)
-        },
     })
 
     // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault()
-
         const documentData = { title, content, ownerId, isLocked }
-
-        // Trigger the mutation with the document ID and the new data
         updateMutate({ id, document: documentData })
     }
 
-    // Loading state for both fetching and mutation
-    if (isFetchingDocument || isUpdating || isDeleting) {
-        return <Spinner size="xl" />
+    // Centered loading spinner or skeletons for loading states
+    if (isFetchingDocument) {
+        return (
+            <Flex justify="center" align="center" height="100vh">
+                <Spinner size="xl" />
+            </Flex>
+        )
     }
 
-    if (fetchError)
+    if (fetchError) {
         return (
-            <div>
-                Error: {fetchError.message || "Failed to fetch document."}
-            </div>
+            <Alert status="error" mb={4}>
+                <AlertIcon />
+                {fetchError.message || "Failed to fetch document."}
+            </Alert>
         )
+    }
 
     return (
         <>
@@ -112,48 +110,67 @@ const EditDocument = () => {
             <form onSubmit={handleSubmit}>
                 <FormControl mb={4}>
                     <FormLabel>Dokument Titel</FormLabel>
-                    <Input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Skriv dokumentets titel"
-                        required
-                    />
+                    {isFetchingDocument ? (
+                        <Skeleton height="40px" />
+                    ) : (
+                        <Input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Skriv dokumentets titel"
+                            required
+                            _placeholder={{ color: "gray.500" }}
+                        />
+                    )}
                 </FormControl>
 
                 <FormControl mb={4}>
                     <FormLabel>Dokument Innehåll</FormLabel>
-                    <Textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Skriv innehållet för dokumentet"
-                        required
-                    />
+                    {isFetchingDocument ? (
+                        <Skeleton height="100px" />
+                    ) : (
+                        <Textarea
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            placeholder="Skriv innehållet för dokumentet"
+                            required
+                            _placeholder={{ color: "gray.500" }}
+                        />
+                    )}
                 </FormControl>
 
                 <FormControl mb={4}>
                     <FormLabel>ID av Ägare</FormLabel>
-                    <Input
-                        type="text"
-                        value={ownerId}
-                        onChange={(e) => setOwnerId(e.target.value)}
-                        placeholder="Skriv ägarens ID"
-                        required
-                    />
+                    {isFetchingDocument ? (
+                        <Skeleton height="40px" />
+                    ) : (
+                        <Input
+                            type="text"
+                            value={ownerId}
+                            onChange={(e) => setOwnerId(e.target.value)}
+                            placeholder="Skriv ägarens ID"
+                            required
+                            _placeholder={{ color: "gray.500" }}
+                        />
+                    )}
                 </FormControl>
 
                 <FormControl mb={4}>
-                    <Checkbox
-                        isChecked={isLocked}
-                        onChange={(e) => setIsLocked(e.target.checked)}
-                    >
-                        Låst dokument
-                    </Checkbox>
+                    {isFetchingDocument ? (
+                        <Skeleton height="20px" width="150px" />
+                    ) : (
+                        <Checkbox
+                            isChecked={isLocked}
+                            onChange={(e) => setIsLocked(e.target.checked)}
+                        >
+                            Låst dokument
+                        </Checkbox>
+                    )}
                 </FormControl>
 
                 <Box mb={4} display="flex" gap={4}>
                     <Button
-                        colorScheme="teal"
+                        colorScheme="green"
                         type="submit"
                         isLoading={isUpdating}
                     >
@@ -174,6 +191,7 @@ const EditDocument = () => {
                     </Button>
                 </Box>
 
+                {/* Error Alerts for Updates and Deletes */}
                 {isUpdateError && (
                     <Alert status="error" mt={4}>
                         <AlertIcon />

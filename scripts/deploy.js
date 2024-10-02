@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 "use strict"
 
 const { spawn } = require("child_process")
@@ -50,5 +52,8 @@ deployProcess.on("close", (code) => {
         console.error(`Process exited with code: ${code}`)
     } else {
         console.log("Deployment completed successfully.")
+        console.log(
+            `You can now view your document on https://www.student.bth.se/~${user}/editor/`
+        )
     }
 })

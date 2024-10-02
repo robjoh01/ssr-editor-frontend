@@ -28,6 +28,8 @@
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
+        "lint": "npm run eslint",
+        "eslint": "eslint .",
         "serve": "serve -s build -l 4000",
         "deploy": "npm run build && node scripts/deploy.js"
     },
@@ -51,6 +53,10 @@
     },
     "devDependencies": {
         "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-        "cross-env": "^7.0.3"
+        "@eslint/js": "^9.11.1",
+        "cross-env": "^7.0.3",
+        "eslint": "^8.57.1",
+        "eslint-plugin-react": "^7.37.1",
+        "globals": "^15.10.0"
     }
 }
