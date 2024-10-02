@@ -32,3 +32,6 @@ jobs:
 
             - name: Build Project
               run: npm run build
+
+            # TODO: Add deploy step with env variables for acronym BTH user
+            # TODO: Add ability to see coverage in github with coverage badge

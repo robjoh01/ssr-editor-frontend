@@ -6,6 +6,10 @@ import About from "../pages/About"
 
 const queryClient = new QueryClient()
 
+// TODO: Fix these test cases
+
+// FIXME: Could not import and render home page. Setup and mock API calls and fix render home page without any issues.
+
 test("navigates to About page and renders content", async () => {
     render(
         <QueryClientProvider client={queryClient}>
