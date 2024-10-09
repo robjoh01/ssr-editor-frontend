@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "target": "es6",
+        "paths": {
+            "@/*": ["./src/*"],
+            "@components/*": ["./src/components/*"],
+            "@hooks/*": ["./src/hooks/*"],
+            "@pages/*": ["./src/pages/*"],
+            "@tests/*": ["./src/tests/*"]
+        }
+    },
+    "exclude": ["node_modules"]
+}

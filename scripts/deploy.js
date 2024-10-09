@@ -8,7 +8,7 @@ require("dotenv").config()
 // Log to indicate that the script is running
 console.log("Deploy script is running...")
 
-const user = process.env.REACT_APP_DEPLOY_USER
+const user = import.meta.env.VITE_DEPLOY_USER
 
 if (!user) {
     console.error(
