@@ -1,26 +1,33 @@
-import React from "react"
-import { Box, Container } from "@chakra-ui/react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import routes from "~react-pages"
+import React, { Suspense } from "react"
+import { useRoutes } from "react-router-dom"
 
-import Home from "./pages/Home"
-import CreateDocument from "./pages/CreateDocument"
-import EditDocument from "./pages/EditDocument"
-import About from "./pages/About"
+import { Container, Grid, GridItem } from "@chakra-ui/react"
+
+import { Header, Footer, Loading } from "@/components"
 
 function App() {
     return (
-        <Router basename={import.meta.env.VITE_BASENAME}>
-            <Box bg="gray.900" minH="100vh" color="white">
-                <Container maxW="container.md" py={5}>
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/new" element={<CreateDocument />} />
-                        <Route path="/edit/:id" element={<EditDocument />} />
-                        <Route path="/about" element={<About />} />
-                    </Routes>
+        <Grid templateRows="auto 1fr auto" minH="100vh">
+            {/* Header */}
+            <GridItem>
+                <Header />
+            </GridItem>
+
+            {/* Main Content */}
+            <GridItem as="main">
+                <Container maxW="container.xl" py={5} h="100%">
+                    <Suspense fallback={<Loading />}>
+                        {useRoutes(routes)}
+                    </Suspense>
                 </Container>
-            </Box>
-        </Router>
+            </GridItem>
+
+            {/* Footer */}
+            <GridItem>
+                <Footer />
+            </GridItem>
+        </Grid>
     )
 }
 
