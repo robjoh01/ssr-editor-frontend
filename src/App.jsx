@@ -9,7 +9,7 @@ import About from "./pages/About"
 
 function App() {
     return (
-        <Router basename={process.env.REACT_APP_BASENAME}>
+        <Router basename={import.meta.env.VITE_BASENAME}>
             <Box bg="gray.900" minH="100vh" color="white">
                 <Container maxW="container.md" py={5}>
                     <Routes>
