@@ -1,8 +1,13 @@
 import { defineConfig } from "vite"
+import dotenv from "dotenv"
+
 import react from "@vitejs/plugin-react"
 import Pages from "vite-plugin-pages"
 
+dotenv.config()
+
 export default defineConfig({
+    base: process.env.VITE_HOMEPAGE_URL || "./",
     build: {
         manifest: true,
     },

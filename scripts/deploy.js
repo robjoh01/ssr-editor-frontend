@@ -2,26 +2,29 @@
 
 "use strict"
 
-const { spawn } = require("child_process")
-require("dotenv").config()
+import { spawn } from "child_process"
+import { config } from "dotenv"
+config()
 
 // Log to indicate that the script is running
 console.log("Deploy script is running...")
 
-const user = import.meta.env.VITE_DEPLOY_USER
+const user = process.env.DEPLOY_USER
 
 if (!user) {
     console.error(
-        "Error: 'REACT_APP_DEPLOY_USER' is not set. Please check your .env file or environment variables."
+        "Error: 'DEPLOY_USER' is not set. Please check your .env file or environment variables."
     )
     process.exit(1) // Exit the process with a failure code
 }
+
+// $ rsync -av --delete dist/ <user>@ssh.student.bth.se:www/editor
 
 const command = "rsync"
 const args = [
     "-av",
     "--delete",
-    "build/",
+    "dist/",
     `${user}@ssh.student.bth.se:www/editor`,
 ]
 
