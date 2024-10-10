@@ -3,31 +3,29 @@ import pluginJs from "@eslint/js"
 import pluginReact from "eslint-plugin-react"
 
 export default [
-    { files: ["**/*.{js,mjs,cjs,jsx}"] },
-    { files: ["**/*.js"], languageOptions: { sourceType: "module" } },
     {
-        settings: {
-            react: {
-                version: "detect",
-            },
-        },
-    },
-    {
+        files: ["**/*.{js,mjs,cjs,jsx}"],
         languageOptions: {
             globals: {
                 ...globals.browser,
                 ...globals.node,
             },
+            parserOptions: {
+                sourceType: "module",
+            },
         },
         rules: {
-            // No semi in the code
             semi: ["error", "never"],
-
-            // No console logs in the code
             "no-console": "warn",
-
-            // Enforce double quotes
             quotes: ["error", "double"],
+            "react/prop-types": "off",
+        },
+    },
+    {
+        settings: {
+            react: {
+                version: "detect", // Automatically detect the React version
+            },
         },
     },
     pluginJs.configs.recommended,
