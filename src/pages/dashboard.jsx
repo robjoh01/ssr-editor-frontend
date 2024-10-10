@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { useUser } from "@/hooks/UserContext"
 import useErrorHandler from "@/utils/errorHandler"
 
@@ -20,8 +21,12 @@ import {
 
 import { BiPlus } from "react-icons/bi"
 
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { createDocument, fetchAllDocuments } from "@/utils/api"
+
 function Dashboard() {
-    const { isLoggedIn } = useUser()
+    const navigate = useNavigate()
+    const { user, isLoggedIn } = useUser()
     const { navigateToError } = useErrorHandler()
 
     useEffect(() => {
@@ -30,28 +35,8 @@ function Dashboard() {
         }
     }, [isLoggedIn, navigateToError])
 
-    const [activeFilters, setActiveFilters] = useState([])
+    const [activeFilters, setActiveFilters] = useState(["shared"])
     const [sortOption, setSortOption] = useState("lastUpdated")
-
-    const filteredDocuments = [
-        {
-            id: 1,
-            title: "Document 1",
-            lastUpdated: "2024-10-01",
-            owner: "User A",
-            shared: true,
-            modifiable: false,
-        },
-        {
-            id: 2,
-            title: "Document 2",
-            lastUpdated: "2024-10-02",
-            owner: "User B",
-            shared: false,
-            modifiable: true,
-        },
-        // Add more documents as needed
-    ]
 
     const handleFilterChange = (filter) => {
         setActiveFilters((prev) =>
@@ -63,8 +48,52 @@ function Dashboard() {
 
     const handleSortChange = (e) => {
         setSortOption(e.target.value)
-        // Add sorting logic based on selected option
     }
+
+    // Fetch all documents with filters and sorting via the API
+    const {
+        data: documents,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ["documents", activeFilters, sortOption],
+        queryFn: () => {
+            const grantArray = []
+
+            if (activeFilters.includes("shared")) {
+                grantArray.push("read")
+            }
+            if (activeFilters.includes("modifiable")) {
+                grantArray.push("write")
+            }
+
+            // Call the API with the constructed filter
+            return fetchAllDocuments({
+                userId: user._id,
+                grants: grantArray,
+                sort: sortOption,
+            })
+        },
+    })
+
+    const [docData] = useState({
+        title: "New Document",
+        content: "",
+    })
+
+    const mutation = useMutation({
+        mutationFn: (newDocument) => createDocument(newDocument),
+        onSuccess: (data) => {
+            console.log("Document created successfully:", data)
+            navigate(`/document/${data.data.id}`)
+        },
+        onError: (error) => {
+            console.error("Error creating document:", error)
+        },
+    })
+
+    if (isLoading) return <Text>Loading...</Text>
+    if (error) return <Text>Error fetching documents</Text>
 
     return (
         <Box p={5}>
@@ -127,15 +156,20 @@ function Dashboard() {
                                 display="flex"
                                 alignItems="center"
                                 justifyContent="center"
+                                onClick={() => mutation.mutate(docData)}
                             >
                                 <HStack spacing={2}>
-                                    <Text>Create New Document</Text>
+                                    <Text>
+                                        {mutation.isLoading
+                                            ? "Creating..."
+                                            : "Create Document"}
+                                    </Text>
                                     <BiPlus />
                                 </HStack>
                             </Button>
                         </Card>
                     </GridItem>
-                    {filteredDocuments.map((doc) => (
+                    {documents?.data.map((doc) => (
                         <GridItem key={doc.id}>
                             <Card>
                                 <CardHeader>

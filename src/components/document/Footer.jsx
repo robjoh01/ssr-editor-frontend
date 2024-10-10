@@ -1,13 +1,22 @@
 import React from "react"
 
-import { Box, HStack } from "@chakra-ui/react"
+import { Text, HStack, Spacer } from "@chakra-ui/react"
 
-function Footer({ wordCount, lastEdited }) {
+function Footer({ wordCount, charCount, lastEdited }) {
     return (
-        <HStack justifyContent="space-between" width="full" p={4} mb={32}>
-            <Box>Word Count: {wordCount}</Box>
-            <Box>Last Edited: {lastEdited}</Box>
-        </HStack>
+        <>
+            <Spacer />
+            <Spacer />
+            <Spacer />
+            <Spacer />
+            <HStack justifyContent="space-between" width="full" p={4}>
+                <HStack>
+                    <Text>Words: {wordCount ?? 0}</Text>
+                    <Text>Characters: {charCount ?? 0}</Text>
+                </HStack>
+                <Text>Last Edited: {lastEdited ?? ""}</Text>
+            </HStack>
+        </>
     )
 }
 

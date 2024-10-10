@@ -1,5 +1,4 @@
 import Header from "./Header"
-import Body from "./Body"
 import Footer from "./Footer"
 
 import Toc from "./Toc"
@@ -10,7 +9,6 @@ import ViewerList from "./ViewerList"
 
 export {
     Header as DocumentHeader,
-    Body as DocumentBody,
     Footer as DocumentFooter,
     Toc,
     Toolbar,

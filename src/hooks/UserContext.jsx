@@ -17,16 +17,19 @@ export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(
         getDefaultValue(
             {
-                name: "John Doe",
-                email: "john.doe@me.com",
-                picture: "",
-                isAdmin: false,
-                password: "foo",
-                createdAt: new Date("2022-01-01"),
-                lastSignIn: new Date(),
-                documentsCreated: 3,
-                documentsShared: 10,
-                documentsAccess: 5,
+                _id: "66eae0bd0f6e02824705d72a",
+                email: "bYxkM@example.com",
+                name: "Robin Johannesson",
+                documents: ["67080abb97c1e14ff70913f0"],
+                stats: {
+                    totalDocuments: 1,
+                    totalEdits: 5,
+                    totalComments: 1,
+                },
+                createdAt: "9/1/2020, 11:36:33 AM",
+                lastLogin: "9/1/2020, 11:36:33 AM",
+                passwordHash: "hashedPassword1",
+                profilePicture: "url_to_profile_pic_1",
             },
             null
         )
