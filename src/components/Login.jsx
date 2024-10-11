@@ -14,7 +14,22 @@ import {
 
 import { BiLogoGithub, BiLogoGoogle } from "react-icons/bi"
 
+import { useUser } from "@/hooks/UserContext"
+
+// isLoading={props.isSubmitting}
+
 function Login({ setTabIndex }) {
+    const { logIn } = useUser()
+
+    const handleLogin = () => {
+        // TODO: Fix this logic function
+        logIn({
+            _id: "66eae0bd0f6e02824705d72a",
+            email: "bYxkM@example.com",
+            name: "Robin Johannesson",
+        })
+    }
+
     return (
         <Box textAlign="center" width="full" p={4}>
             {/* Vertical stack for the entire form */}
@@ -59,13 +74,18 @@ function Login({ setTabIndex }) {
                         />
                     </FormControl>
 
-                    <Button colorScheme="blue" width="full">
+                    <Button
+                        colorScheme="blue"
+                        width="full"
+                        onClick={handleLogin}
+                    >
                         Log In
                     </Button>
 
                     <Button
                         variant="link"
                         colorScheme="teal"
+                        type="submit"
                         onClick={() => setTabIndex(1)}
                     >
                         Don't have an account? Sign up
