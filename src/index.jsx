@@ -11,24 +11,22 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 const queryClient = new QueryClient()
 
 import { BrowserRouter } from "react-router-dom"
-import { UserProvider } from "@hooks/UserContext"
+import { AuthProvider } from "@hooks/AuthContext"
 
 const Main = () => {
     return (
-        <React.StrictMode>
-            <QueryClientProvider client={queryClient}>
-                <ChakraProvider theme={theme}>
-                    <ColorModeScript
-                        initialColorMode={theme.config.initialColorMode}
-                    />
-                    <BrowserRouter basename={import.meta.env.VITE_BASENAME}>
-                        <UserProvider>
-                            <App />
-                        </UserProvider>
-                    </BrowserRouter>
-                </ChakraProvider>
-            </QueryClientProvider>
-        </React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+            <ChakraProvider theme={theme}>
+                <ColorModeScript
+                    initialColorMode={theme.config.initialColorMode}
+                />
+                <BrowserRouter basename={import.meta.env.VITE_BASENAME}>
+                    <AuthProvider>
+                        <App />
+                    </AuthProvider>
+                </BrowserRouter>
+            </ChakraProvider>
+        </QueryClientProvider>
     )
 }
 

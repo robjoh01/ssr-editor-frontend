@@ -8,6 +8,9 @@ dotenv.config()
 
 export default defineConfig({
     base: process.env.VITE_HOMEPAGE_URL || "./",
+    server: {
+        port: process.env.VITE_CLIENT_PORT || 3000,
+    },
     build: {
         manifest: true,
     },
