@@ -10,19 +10,12 @@ import {
     MenuItem,
 } from "@chakra-ui/react"
 
-import {
-    BiBold,
-    BiItalic,
-    BiUnderline,
-    BiCommentDetail,
-    BiUser,
-} from "react-icons/bi"
-import { FaShareAlt, FaFileAlt } from "react-icons/fa"
+import { FaShareAlt } from "react-icons/fa" // FaFileAlt
 import { ChevronDownIcon } from "@chakra-ui/icons"
 
 import { ViewerList } from "@/components/document"
 
-function Header({ title, setTitle, viewers, setViewers }) {
+function Header({ title, setTitle, viewers }) {
     return (
         <HStack justifyContent="space-between" width="full">
             <HStack spacing={2} width="full">

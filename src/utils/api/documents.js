@@ -1,4 +1,6 @@
-import axios from "axios"
+"use strict"
+
+import axios from "@utils/axios.js"
 
 /**
  * Fetch all documents with filters
@@ -25,7 +27,7 @@ export async function fetchAllDocuments(filters = {}) {
     if (sort) queryParams.append("sort", sort)
 
     const { data, status, statusText } = await axios.get(
-        `${import.meta.env.VITE_API_URL}/document/all?${queryParams.toString()}`
+        `/document/all?${queryParams.toString()}`
     )
 
     return { data, status, statusText }
@@ -37,8 +39,19 @@ export async function fetchAllDocuments(filters = {}) {
  * @returns {Promise<{data: *, status: number, statusText: string}>}
  */
 export async function fetchDocument(id) {
-    const { data, status, statusText } = await axios.get(
-        `${import.meta.env.VITE_API_URL}/document/${id}`
+    const { data, status, statusText } = await axios.get(`/document/${id}`)
+    return { data, status, statusText }
+}
+
+/**
+ * Create a new document
+ * @param {Object} docData - Data for the new document
+ * @returns {Promise<{data: *, status: number, statusText: string}>}
+ */
+export async function createDocument(docData) {
+    const { data, status, statusText } = await axios.post(
+        "/document/create",
+        docData
     )
     return { data, status, statusText }
 }
@@ -51,20 +64,7 @@ export async function fetchDocument(id) {
  */
 export async function updateDocument({ id, document }) {
     const { data, status, statusText } = await axios.put(
-        `${import.meta.env.VITE_API_URL}/document/${id}`,
-        document
-    )
-    return { data, status, statusText }
-}
-
-/**
- * Create a new document
- * @param {Object} document - Document data
- * @returns {Promise<{data: *, status: number, statusText: string}>}
- */
-export async function createDocument(document) {
-    const { data, status, statusText } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/document/create`,
+        `/document/${id}`,
         document
     )
     return { data, status, statusText }
@@ -75,9 +75,10 @@ export async function createDocument(document) {
  * @param {string} id - ID of the document to delete
  * @returns {Promise<{data: *, status: number, statusText: string}>}
  */
-export async function deleteDocument(id) {
+export async function deleteDocument({ id }) {
     const { data, status, statusText } = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/document/${id}`
+        `/document/${id}`,
+        document
     )
     return { data, status, statusText }
 }

@@ -41,8 +41,8 @@ function About() {
                         SSR Editor is designed to revolutionize the way teams
                         collaborate on documents. By leveraging the power of
                         server-side rendering and real-time updates, we provide
-                        a seamless editing experience that's fast, reliable, and
-                        accessible from anywhere.
+                        a seamless editing experience that&apos;s fast,
+                        reliable, and accessible from anywhere.
                     </Text>
                 </Box>
 
@@ -164,8 +164,8 @@ function About() {
                         Get Involved
                     </Heading>
                     <Text color="gray.600">
-                        We're always looking for passionate developers and
-                        designers to join our team. If you're interested in
+                        We&apos;re always looking for passionate developers and
+                        designers to join our team. If you&apos;re interested in
                         contributing to SSR Editor, check out our
                         <Link
                             href="https://github.com/robjoh01/ssr-editor-frontend"

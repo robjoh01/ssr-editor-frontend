@@ -1,7 +1,12 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react"
+import React, { forwardRef } from "react"
 import ReactQuill from "react-quill"
 import "react-quill/dist/quill.snow.css"
-import { Box } from "@chakra-ui/react"
+
+const { Quill } = ReactQuill
+
+import QuillCursors from "quill-cursors"
+
+Quill.register("modules/cursors", QuillCursors)
 
 const modules = {
     toolbar: [
@@ -24,6 +29,7 @@ const modules = {
         delay: 2500,
         userOnly: true,
     },
+    cursors: true, // enable cursors module,
 }
 
 const formats = [
@@ -48,25 +54,16 @@ const formats = [
     "code-block",
 ]
 
-const TextEditor = forwardRef((props, ref) => {
-    const [value, setValue] = useState("")
-
-    // Expose methods to parent component using useImperativeHandle
-    useImperativeHandle(ref, () => ({
-        getValue: () => value,
-        setValue: (newValue) => setValue(newValue),
-    }))
-
+const TextEditor = forwardRef(function TextEditor({ value, onChange }, ref) {
     return (
-        <Box width="full" height="full">
-            <ReactQuill
-                theme="snow"
-                value={value}
-                onChange={setValue}
-                modules={modules}
-                formats={formats}
-            />
-        </Box>
+        <ReactQuill
+            ref={ref}
+            theme="snow"
+            value={value}
+            onChange={onChange}
+            modules={modules}
+            formats={formats}
+        />
     )
 })
 

@@ -1,6 +1,6 @@
 import React from "react"
-import { Link } from "react-router-dom"
-import { useUser } from "@hooks/UserContext"
+import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "@hooks/AuthContext"
 
 import {
     useColorMode,
@@ -21,10 +21,16 @@ import { SunIcon, MoonIcon, ChevronDownIcon } from "@chakra-ui/icons"
 import FancyText from "@carefully-coded/react-text-gradient"
 
 function Header() {
-    const { isLoggedIn, logOut } = useUser()
+    const navigate = useNavigate()
+    const { isLoggedIn, logOut } = useAuth()
 
     const { toggleColorMode } = useColorMode()
     const colorModeIcon = useColorModeValue(<SunIcon />, <MoonIcon />)
+
+    const handleLogout = async () => {
+        await logOut()
+        navigate("/")
+    }
 
     return (
         <Box as="header" borderBottom="1px" borderColor="gray.700" py={4}>
@@ -44,7 +50,7 @@ function Header() {
                                 to: useColorModeValue("#EC4899", "#8c8afd"),
                             }}
                             animate
-                            animationDuration={2000}
+                            animationduration={2000}
                         >
                             SSR Editor
                         </FancyText>
@@ -70,10 +76,12 @@ function Header() {
                                 />
                             </MenuButton>
                             <MenuList>
-                                <MenuItem as={Link} to="/user/profile">
+                                <MenuItem as={Link} to="/profile">
                                     Profile
                                 </MenuItem>
-                                <MenuItem onClick={logOut}>Sign out</MenuItem>
+                                <MenuItem onClick={handleLogout}>
+                                    Sign out
+                                </MenuItem>
                             </MenuList>
                         </Menu>
                     )}

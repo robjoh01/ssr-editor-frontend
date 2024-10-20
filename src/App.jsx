@@ -8,15 +8,15 @@ import { Header, Footer, Loading } from "@/components"
 
 function App() {
     return (
-        <Grid templateRows="auto 1fr auto" minH="100vh">
+        <Grid templateRows="auto 1fr auto" minH="100dvh">
             {/* Header */}
             <GridItem>
                 <Header />
             </GridItem>
 
             {/* Main Content */}
-            <GridItem as="main">
-                <Container maxW="container.xl" py={5} h="100%">
+            <GridItem as="main" h="full">
+                <Container maxW="container.xl" py={5} h="full">
                     <Suspense fallback={<Loading />}>
                         {useRoutes(routes)}
                     </Suspense>

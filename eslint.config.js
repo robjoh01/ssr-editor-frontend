@@ -18,7 +18,6 @@ export default [
             semi: ["error", "never"],
             "no-console": "warn",
             quotes: ["error", "double"],
-            "react/prop-types": "off",
         },
     },
     {
@@ -40,5 +39,10 @@ export default [
             "**/*.test.{js,mjs,cjs,jsx}",
             "coverage/**/*",
         ],
+    },
+    {
+        rules: {
+            "react/prop-types": "off",
+        },
     },
 ]

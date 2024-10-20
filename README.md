@@ -23,6 +23,8 @@ SSR-Editor is a real-time web application for creating and editing documents col
 - [Chakra UI](https://chakra-ui.com)
 - [Quill](https://quilljs.com)
 - [Vite](https://vitejs.dev)
+- [Axios](https://axios-http.com)
+- [Socket.io](https://socket.io)
 - [NPM](https://www.npmjs.com)
 
 ## Getting Started
@@ -34,23 +36,24 @@ SSR-Editor is a real-time web application for creating and editing documents col
 
 2. Create the following `.env` files in the root of your project:
 
-   - **.env.development**:
+- **.env**:
+     ```bash
+     DEPLOY_USER=<your_acronym> # BTH's user acronym for deploying at BTH's server
+     VITE_SAVE_DELAY=750 # Save delay in milliseconds
      ```
-     VITE_API_URL=http://localhost:1338/api  # Backend URL with port
+
+- **.env.development**:
+     ```bash
+     VITE_BACKEND_URL="http://localhost:1338"  # API URL for development
      VITE_BASENAME="" # Basename for Router
      VITE_HOMEPAGE_URL="" # Homepage URL
      ```
 
-   - **.env.production**:
-     ```
-     VITE_API_URL=<your_backend_url>  # Backend URL for production
+- **.env.production**:
+     ```bash
+     VITE_BACKEND_URL="<your_backend_url>"  # API URL for production
      VITE_BASENAME="~<your_acronym>/editor" # Basename for Router
-     VITE_HOMEPAGE_URL="<your_production_url>" # Homepage URL
-     ```
-
-   - **.env (optional)**: You can create this file to set the `PORT` for the frontend application:
-     ```
-     DEPLOY_USER=<your_acronym> # BTH acronym user for deploying
+     VITE_HOMEPAGE_URL="https://www.student.bth.se/~<your_acronym>/editor/" # Homepage URL (BTH's server)
      ```
 
 3. To launch the application in development mode, use:

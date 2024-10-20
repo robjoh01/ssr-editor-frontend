@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useLayoutEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import {
@@ -12,19 +12,19 @@ import {
 } from "@chakra-ui/react"
 
 import { Login, SignUp } from "@components"
-import { useUser } from "@/hooks/UserContext"
+import { useAuth } from "@hooks/AuthContext"
 
 import FancyText from "@carefully-coded/react-text-gradient"
 
 function Index() {
     const navigate = useNavigate()
-    const { user, isLoggedIn } = useUser()
+    const { isLoggedIn, user } = useAuth()
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (isLoggedIn) {
             navigate("/dashboard", { replace: true })
         }
-    }, [user, isLoggedIn, navigate])
+    }, [user, navigate])
 
     const [tabIndex, setTabIndex] = useState(0) // Control active tab
 
@@ -42,7 +42,7 @@ function Index() {
                             to: useColorModeValue("#EC4899", "#8c8afd"),
                         }}
                         animate
-                        animationDuration={2000}
+                        animationduration={2000}
                     >
                         Welcome to
                     </FancyText>
