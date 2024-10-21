@@ -6,7 +6,7 @@ import React, {
     useState,
 } from "react"
 
-import { fetchMyself, refresh } from "@/utils/api/auth"
+// import { fetchMyself, refresh } from "@/utils/api/auth"
 import axios from "@/utils/axios.js"
 
 const AuthContext = createContext(undefined)
@@ -27,13 +27,11 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUser = async () => {
         try {
-            const { data } = await fetchMyself()
+            const { data } = await axios.get("/auth/myself")
+
             setToken(data.accessToken)
-            delete data.accessToken
-            setUser({
-                _id: data._id,
-                email: data.email,
-            })
+            // delete data.accessToken
+            setUser(data.user)
             setIsLoggedIn(true)
             return data
         } catch (error) {
@@ -73,7 +71,7 @@ export const AuthProvider = ({ children }) => {
                     error?.response?.data === "No token provided"
                 ) {
                     try {
-                        const res = await refresh()
+                        const res = await axios.post("/auth/refresh")
                         setToken(res.data.accessToken)
 
                         originalRequest.headers[

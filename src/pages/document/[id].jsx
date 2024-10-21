@@ -26,8 +26,6 @@ import { TextEditor } from "@/components/actions"
 
 // TODO: Watch this video: https://www.youtube.com/watch?v=Ytc0XfkNbVQ&t=1305s
 
-// TODO: Check user's privileges to access the document
-
 function DocumentPage() {
     const { id } = useParams()
 
@@ -44,7 +42,10 @@ function DocumentPage() {
     const lastContentRef = useRef(null)
 
     useEffect(() => {
-        const socket = io(import.meta.env.VITE_BACKEND_URL)
+        const socket = io(import.meta.env.VITE_BACKEND_URL, {
+            withCredentials: true,
+            transports: ["websocket"],
+        })
         const editor = inputRef.current.getEditor()
 
         inputRef.current?.focus()

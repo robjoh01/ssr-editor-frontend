@@ -41,6 +41,7 @@ export async function authWithGoogle() {
  */
 export async function refresh() {
     const { data, status, statusText } = await axios.post("/auth/refresh")
+    console.log(`Refreshing token: ${JSON.stringify(data)}`)
     return { data, status, statusText }
 }
 
