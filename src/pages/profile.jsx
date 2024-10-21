@@ -73,7 +73,10 @@ function Profile() {
     useEffect(() => {
         if (!userQuery.data) return
 
-        const { name, email, createdAt, lastLogin, stats } = userQuery.data.data
+        console.log(userQuery.data)
+
+        const { name, email, createdAt, lastLogin, stats } =
+            userQuery.data.data.user
 
         setName(name)
         setEmail(email)
@@ -116,7 +119,6 @@ function Profile() {
             maxW="2xl"
             mx="auto"
             p={8}
-            bg="white"
         >
             <VStack spacing={6} align="stretch">
                 <Heading as="h1" size="lg" textAlign="center">

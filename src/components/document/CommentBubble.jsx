@@ -8,7 +8,6 @@ function CommentBubble({ position, onComment }) {
             position="absolute"
             top={position.top}
             left={position.left}
-            bg="white"
             border="1px solid gray"
             borderRadius="md"
             p={2}
