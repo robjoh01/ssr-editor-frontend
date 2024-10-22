@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+
 import { useMutation } from "@tanstack/react-query"
+import axios from "@/utils/axios.js"
+import { authWithGithub, authWithGoogle } from "@/utils/api/auth"
+import { useAuth } from "@/auth/index"
 
 import {
     Box,
@@ -16,16 +20,16 @@ import {
 } from "@chakra-ui/react"
 
 import { BiLogoGithub, BiLogoGoogle } from "react-icons/bi"
+import { BeatLoader } from "react-spinners"
 
-import { authWithGithub, authWithGoogle, login } from "@/utils/api/auth"
-import { createUser } from "@/utils/api/users"
-
+import { useSnackbar } from "notistack"
 import validator from "validator"
-
-// TODO: useMutation
 
 function SignUp({ setTabIndex }) {
     const navigate = useNavigate()
+
+    const { fetchUser } = useAuth()
+    const { enqueueSnackbar } = useSnackbar()
 
     const [name, setName] = useState("")
     const [nameError, setNameError] = useState()
@@ -88,33 +92,54 @@ function SignUp({ setTabIndex }) {
         }
 
         setPasswordAgainError()
-    }, [passwordAgain])
+    }, [password, passwordAgain])
 
-    const handleSignUp = async (e) => {
+    // Mutation for logging in
+    const loginMutation = useMutation({
+        mutationFn: () => {
+            return axios.post("/auth/login", {
+                email,
+                password,
+            })
+        },
+        onSuccess: async () => {
+            enqueueSnackbar("Login successful", { variant: "success" })
+
+            await fetchUser()
+
+            navigate("/dashboard", { replace: true })
+        },
+        onError: (error) => {
+            enqueueSnackbar(`Failed to login: ${error.message}`, {
+                variant: "error",
+            })
+        },
+    })
+
+    // Mutation for creating a user
+    const createUserMutation = useMutation({
+        mutationFn: () =>
+            axios.post("/auth/signup", {
+                name,
+                email,
+                password,
+            }),
+        onSuccess: () => {
+            enqueueSnackbar("User created", { variant: "success" })
+
+            loginMutation.mutate()
+        },
+        onError: (error) => {
+            enqueueSnackbar(`Failed to create user: ${error.message}`, {
+                variant: "error",
+            })
+        },
+    })
+
+    const handleSignUp = (e) => {
         e.preventDefault()
 
-        const { data, status } = await createUser({
-            name,
-            email,
-            password,
-        })
-
-        if (status !== 200) {
-            console.log(data)
-            return
-        }
-
-        const { data: loginData, status: loginStatus } = await login(
-            email,
-            password
-        )
-
-        if (loginStatus !== 200) {
-            console.log(loginData)
-            return
-        }
-
-        navigate("/dashboard", { replace: true })
+        createUserMutation.mutate()
     }
 
     return (
@@ -223,6 +248,16 @@ function SignUp({ setTabIndex }) {
                     type="submit"
                     colorScheme="teal"
                     width="full"
+                    isLoading={createUserMutation.isPending}
+                    loadingText="Creating user"
+                    spinner={<BeatLoader size={8} color="white" />}
+                    disabled={
+                        createUserMutation.isPending ||
+                        !name ||
+                        !email ||
+                        !password ||
+                        !passwordAgain
+                    }
                     onClick={handleSignUp}
                 >
                     Sign Up

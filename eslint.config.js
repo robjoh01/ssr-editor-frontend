@@ -1,6 +1,13 @@
 import globals from "globals"
+
+// JavaScript
 import pluginJs from "@eslint/js"
+
+// React
 import pluginReact from "eslint-plugin-react"
+import pluginReactHooks from "eslint-plugin-react-hooks"
+import pluginReactRefresh from "eslint-plugin-react-refresh"
+import pluginJsxA11y from "eslint-plugin-jsx-a11y"
 
 export default [
     {
@@ -30,6 +37,13 @@ export default [
     pluginJs.configs.recommended,
     pluginReact.configs.flat.recommended,
     {
+        plugins: {
+            "react-hooks": pluginReactHooks,
+            "jsx-a11y": pluginJsxA11y,
+            "react-refresh": pluginReactRefresh,
+        },
+    },
+    {
         ignores: [
             "node_modules/**/*",
             "dist/**/*",
@@ -43,6 +57,9 @@ export default [
     {
         rules: {
             "react/prop-types": "off",
+            "react-hooks/rules-of-hooks": "error",
+            "react-hooks/exhaustive-deps": "warn",
+            "react-refresh/only-export-components": "warn",
         },
     },
 ]

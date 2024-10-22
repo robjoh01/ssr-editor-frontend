@@ -15,13 +15,14 @@ import {
     FormLabel,
 } from "@chakra-ui/react"
 
+import { Prompt } from "@/components/actions"
 import { BiArrowBack, BiReset } from "react-icons/bi"
 import { BeatLoader } from "react-spinners"
-
-// TODO: Add loading status
+import { useSnackbar } from "notistack"
 
 function Profile() {
     const navigate = useNavigate()
+    const { enqueueSnackbar } = useSnackbar()
 
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
@@ -33,6 +34,17 @@ function Profile() {
         totalComments: 0,
     })
 
+    const [prompt, setPrompt] = useState({
+        isOpen: false,
+        title: "",
+        message: "",
+        confirmText: "",
+        cancelText: "",
+        isLoading: false,
+        loadingText: "",
+        confirmAction: null,
+    })
+
     const userQuery = useQuery({
         queryKey: ["user"],
         queryFn: () => axios.get("/auth/myself"),
@@ -41,17 +53,23 @@ function Profile() {
     const updateUserMutation = useMutation({
         mutationFn: (data) => axios.put("/auth/myself", data),
         onSuccess: () => {
+            enqueueSnackbar("User updated", { variant: "success" })
+
             // Optionally, refetch user data after successful update
             userQuery.refetch()
         },
         onError: (error) => {
-            console.error("Error updating user:", error)
+            enqueueSnackbar(`Failed to update user: ${error.message}`, {
+                variant: "error",
+            })
         },
     })
 
     const deleteUserMutation = useMutation({
         mutationFn: () => axios.delete("/auth/myself"),
         onSuccess: () => {
+            enqueueSnackbar("User deleted", { variant: "success" })
+
             // Optionally, clear user data after successful deletion
             setName("")
             setEmail("")
@@ -66,14 +84,17 @@ function Profile() {
             navigate("/", { replace: true })
         },
         onError: (error) => {
-            console.error("Error deleting user:", error)
+            enqueueSnackbar(`Failed to delete user: ${error.message}`, {
+                variant: "error",
+            })
         },
     })
 
     useEffect(() => {
-        if (!userQuery.data) return
-
-        console.log(userQuery.data)
+        if (!userQuery.data) {
+            navigate("/", { replace: true })
+            return
+        }
 
         const { name, email, createdAt, lastLogin, stats } =
             userQuery.data.data.user
@@ -95,20 +116,34 @@ function Profile() {
     }
 
     const handleResetPassword = () => {
-        // Logic for resetting the password
-        console.log("Resetting password...")
-
-        navigate("/reset-password")
+        setPrompt({
+            isOpen: true,
+            title: "Reset Password",
+            message: "Are you sure you want to reset your password?",
+            confirmText: "Reset",
+            cancelText: "Cancel",
+            isLoading: false,
+            loadingText: "Loading",
+            confirmAction: () => {
+                navigate("/profile/reset", { replace: true })
+            },
+        })
     }
 
     const handleDeleteAccount = () => {
-        // TODO: Add logic for prompting the user to confirm deletion
-
-        if (!window.confirm("Are you sure you want to delete your account?")) {
-            return
-        }
-
-        deleteUserMutation.mutate()
+        setPrompt({
+            isOpen: true,
+            title: "Delete Account",
+            message:
+                "Are you sure you want to delete your account? This action cannot be undone.",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            isLoading: deleteUserMutation.isPending,
+            loadingText: "Deleting",
+            confirmAction: () => {
+                deleteUserMutation.mutate()
+            },
+        })
     }
 
     return (
@@ -120,6 +155,22 @@ function Profile() {
             mx="auto"
             p={8}
         >
+            {prompt.isOpen && (
+                <Prompt
+                    isOpen={prompt.isOpen}
+                    onClose={() =>
+                        setPrompt((prev) => ({ ...prev, isOpen: false }))
+                    }
+                    onConfirm={prompt.confirmAction}
+                    title={prompt.title}
+                    message={prompt.message}
+                    isLoading={prompt.isLoading}
+                    loadingText={prompt.loadingText}
+                    confirmText={prompt.confirmText}
+                    cancelText={prompt.cancelText}
+                />
+            )}
+
             <VStack spacing={6} align="stretch">
                 <Heading as="h1" size="lg" textAlign="center">
                     Your Profile
@@ -219,8 +270,9 @@ function Profile() {
                             type="submit"
                             colorScheme="gray"
                             onClick={handleSubmit}
-                            isLoading={updateUserMutation.isLoading}
+                            isLoading={updateUserMutation.isPending}
                             loadingText="Updating"
+                            disabled={updateUserMutation.isPending}
                             spinner={<BeatLoader size={8} color="white" />}
                             width="full"
                         >

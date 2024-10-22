@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
+import { useAuth } from "@/auth/index"
 import { authWithGithub, authWithGoogle } from "@/utils/api/auth"
 
 import {
@@ -19,9 +20,14 @@ import {
 
 import { BiLogoGithub, BiLogoGoogle } from "react-icons/bi"
 import { BeatLoader } from "react-spinners"
+import { useSnackbar } from "notistack"
 
 function Login({ setTabIndex }) {
     const navigate = useNavigate()
+    const { enqueueSnackbar } = useSnackbar()
+    const { fetchUser } = useAuth()
+
+    // State for email and password
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
 
@@ -33,12 +39,18 @@ function Login({ setTabIndex }) {
                 password,
             })
         },
-        onSuccess: () => {
+        onSuccess: async () => {
+            enqueueSnackbar("Login successful", { variant: "success" })
+
+            await fetchUser()
+
             // Optionally, refetch user data after successful update
             navigate("/dashboard", { replace: true })
         },
         onError: (error) => {
-            console.error("Error updating user:", error)
+            enqueueSnackbar(`Failed to login: ${error.message}`, {
+                variant: "error",
+            })
         },
     })
 
@@ -108,8 +120,9 @@ function Login({ setTabIndex }) {
                         colorScheme="blue"
                         width="full"
                         onClick={handleLogin}
-                        isLoading={loginMutation.isLoading}
+                        isLoading={loginMutation.isPending}
                         loadingText="Logging in"
+                        disabled={loginMutation.isPending}
                         spinner={<BeatLoader size={8} color="white" />}
                     >
                         Login

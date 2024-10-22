@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
             setUser(data.user)
             setIsLoggedIn(true)
             return data
-        } catch (error) {
+        } catch (err) {
             setToken(null)
             setUser(null)
             setIsLoggedIn(false)
@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }) => {
         setToken(null)
         setUser(null)
         setIsLoggedIn(false)
+
         await axios.post("/auth/logout")
     }
 
@@ -107,6 +108,7 @@ export const AuthProvider = ({ children }) => {
             value={{
                 isLoggedIn,
                 user,
+                fetchUser,
                 logOut,
             }}
         >

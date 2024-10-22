@@ -17,6 +17,7 @@ import {
     HStack,
     IconButton,
     Divider,
+    Skeleton,
     CardHeader,
     CardBody,
     CardFooter,
@@ -25,19 +26,24 @@ import { BiPlus, BiTrash } from "react-icons/bi"
 import PortraitCard from "@/components/visuals/PortraitCard.jsx"
 import TextTruncate from "react-text-truncate"
 
+import { useSnackbar } from "notistack"
+import HttpError from "@/utils/httpError.js"
+
 import moment from "moment"
 
 function Dashboard() {
     const navigate = useNavigate()
+    const { enqueueSnackbar } = useSnackbar()
 
     const [activeFilters, setActiveFilters] = useState(["owned", "shared"])
     const [sortOption, setSortOption] = useState("lastUpdated")
     const [documents, setDocuments] = useState([])
+    const [skeletonCount] = useState(5)
 
     const myselfQuery = useQuery({
         queryKey: ["myself"],
-        queryFn: () => {
-            return axios.post("/graphql", {
+        queryFn: () =>
+            axios.post("/graphql", {
                 query: `
                     query UsersQuery {
                         myself {
@@ -62,9 +68,14 @@ function Dashboard() {
                             }
                         }
                     }`,
-            })
-        },
+            }),
     })
+
+    useEffect(() => {
+        if (myselfQuery.data.data.errors) {
+            throw new HttpError(myselfQuery.data.data.errors[0].message, 500)
+        }
+    }, [myselfQuery.data])
 
     const newDocumentMutation = useMutation({
         mutationFn: () => {
@@ -73,10 +84,14 @@ function Dashboard() {
             })
         },
         onSuccess: ({ data }) => {
+            enqueueSnackbar("Document created", { variant: "success" })
+
             navigate(`/document/${data._id}`)
         },
         onError: (error) => {
-            console.error("Error creating document:", error)
+            enqueueSnackbar(`Failed to create document: ${error.message}`, {
+                variant: "error",
+            })
         },
     })
 
@@ -85,11 +100,15 @@ function Dashboard() {
             return axios.delete(`documents/${id}`)
         },
         onSuccess: () => {
+            enqueueSnackbar("Document deleted", { variant: "success" })
+
             // Update documents
             myselfQuery.refetch()
         },
         onError: (error) => {
-            console.error("Error deleting document:", error)
+            enqueueSnackbar(`Failed to delete document: ${error.message}`, {
+                variant: "error",
+            })
         },
     })
 
@@ -202,88 +221,108 @@ function Dashboard() {
                         </Button>
                     </PortraitCard>
                 </GridItem>
-                {documents.map((doc) => (
-                    <GridItem key={doc.id}>
-                        <Link to={`/document/${doc.id}`}>
-                            <PortraitCard>
-                                <CardHeader
-                                    display="flex"
-                                    flexDirection="row"
-                                    justifyContent="space-between"
-                                    alignItems="center"
-                                    pb={2}
-                                >
-                                    <Heading size="md" fontWeight="bold">
-                                        <TextTruncate
-                                            line={2}
-                                            element="span"
-                                            truncateText="..."
-                                            text={doc.title}
-                                        />
-                                    </Heading>
-                                    <IconButton
-                                        icon={<BiTrash />}
-                                        variant="ghost"
-                                        size="sm"
-                                        aria-label="Delete document"
-                                        onClick={() =>
-                                            deleteDocumentMutation.mutate(
-                                                doc.id
-                                            )
-                                        }
-                                        color="red.500"
-                                    />
-                                </CardHeader>
+                {myselfQuery.isPending
+                    ? // Render skeletons while loading
+                      [...Array(skeletonCount)].map((_, idx) => (
+                          <GridItem key={idx}>
+                              <Skeleton height="200px" />
+                          </GridItem>
+                      ))
+                    : // Render the actual documents once the data is loaded
+                      documents?.map((doc) => (
+                          <GridItem key={doc.id}>
+                              <Link to={`/document/${doc.id}`}>
+                                  <PortraitCard>
+                                      <CardHeader
+                                          display="flex"
+                                          flexDirection="row"
+                                          justifyContent="space-between"
+                                          alignItems="center"
+                                          pb={2}
+                                      >
+                                          <Heading size="md" fontWeight="bold">
+                                              <TextTruncate
+                                                  line={2}
+                                                  element="span"
+                                                  truncateText="..."
+                                                  text={doc.title}
+                                              />
+                                          </Heading>
+                                          <IconButton
+                                              icon={<BiTrash />}
+                                              variant="ghost"
+                                              size="sm"
+                                              aria-label="Delete document"
+                                              onClick={() =>
+                                                  deleteDocumentMutation.mutate(
+                                                      doc.id
+                                                  )
+                                              }
+                                              color="red.500"
+                                          />
+                                      </CardHeader>
 
-                                <CardBody>
-                                    <VStack align="flex-start" spacing={2}>
-                                        <Text fontSize="sm" color="gray.600">
-                                            <Text
-                                                as="span"
-                                                fontWeight="semibold"
-                                            >
-                                                Author:
-                                            </Text>{" "}
-                                            {doc.owner.name}
-                                        </Text>
-                                        <Text fontSize="sm" color="gray.600">
-                                            <Text
-                                                as="span"
-                                                fontWeight="semibold"
-                                            >
-                                                Created:
-                                            </Text>{" "}
-                                            {moment(
-                                                doc.createdAt,
-                                                "YYYY-MM-DDTHH:mm:ss.sssZ"
-                                            ).format()}
-                                        </Text>
-                                        <Text fontSize="sm" color="gray.600">
-                                            <Text
-                                                as="span"
-                                                fontWeight="semibold"
-                                            >
-                                                Last Updated:
-                                            </Text>{" "}
-                                            {moment(
-                                                doc.updatedAt,
-                                                "YYYY-MM-DDTHH:mm:ss.sssZ"
-                                            ).format("YYYY/MM/DD")}
-                                        </Text>
-                                    </VStack>
-                                </CardBody>
+                                      <CardBody>
+                                          <VStack
+                                              align="flex-start"
+                                              spacing={2}
+                                          >
+                                              <Text
+                                                  fontSize="sm"
+                                                  color="gray.600"
+                                              >
+                                                  <Text
+                                                      as="span"
+                                                      fontWeight="semibold"
+                                                  >
+                                                      Author:
+                                                  </Text>{" "}
+                                                  {doc.owner.name}
+                                              </Text>
+                                              <Text
+                                                  fontSize="sm"
+                                                  color="gray.600"
+                                              >
+                                                  <Text
+                                                      as="span"
+                                                      fontWeight="semibold"
+                                                  >
+                                                      Created:
+                                                  </Text>{" "}
+                                                  {moment(
+                                                      doc.createdAt,
+                                                      "YYYY-MM-DDTHH:mm:ss.sssZ"
+                                                  ).format()}
+                                              </Text>
+                                              <Text
+                                                  fontSize="sm"
+                                                  color="gray.600"
+                                              >
+                                                  <Text
+                                                      as="span"
+                                                      fontWeight="semibold"
+                                                  >
+                                                      Last Updated:
+                                                  </Text>{" "}
+                                                  {moment(
+                                                      doc.updatedAt,
+                                                      "YYYY-MM-DDTHH:mm:ss.sssZ"
+                                                  ).format("YYYY/MM/DD")}
+                                              </Text>
+                                          </VStack>
+                                      </CardBody>
 
-                                <Divider />
+                                      <Divider />
 
-                                <CardFooter textAlign="left">
-                                    <Text fontSize="xs" color="gray.500">
-                                        Document ID: {doc.id}
-                                    </Text>
-                                </CardFooter>
-                            </PortraitCard>
-                        </Link>
-                    </GridItem>
-                ))}
+                                      <CardFooter textAlign="left">
+                                          <Text fontSize="xs" color="gray.500">
+                                              Document ID: {doc.id}
+                                          </Text>
+                                      </CardFooter>
+                                  </PortraitCard>
+                              </Link>
+                          </GridItem>
+                      ))}
             </Grid>
         </Box>
     )

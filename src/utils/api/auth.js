@@ -41,7 +41,6 @@ export async function authWithGoogle() {
  */
 export async function refresh() {
     const { data, status, statusText } = await axios.post("/auth/refresh")
-    console.log(`Refreshing token: ${JSON.stringify(data)}`)
     return { data, status, statusText }
 }
 
@@ -63,7 +62,6 @@ export async function fetchMyself() {
  * @returns {Promise<{data: *, status: number, statusText: string}>}
  */
 export async function updateMyself(user) {
-    console.log(`Updating user: ${JSON.stringify(user)}`)
     const { data, status, statusText } = await axios.put("/auth/myself", user)
     return { data, status, statusText }
 }

@@ -1,6 +1,6 @@
 import React from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { useAuth } from "@hooks/AuthContext"
+import { useAuth } from "@/auth/index"
 
 import {
     useColorMode,
@@ -17,11 +17,15 @@ import {
     IconButton,
 } from "@chakra-ui/react"
 import { SunIcon, MoonIcon, ChevronDownIcon } from "@chakra-ui/icons"
+import { BiCodeAlt } from "react-icons/bi"
 
 import FancyText from "@carefully-coded/react-text-gradient"
 
+import { useSnackbar } from "notistack"
+
 function Header() {
     const navigate = useNavigate()
+    const { enqueueSnackbar } = useSnackbar()
     const { isLoggedIn, logOut } = useAuth()
 
     const { toggleColorMode } = useColorMode()
@@ -29,7 +33,9 @@ function Header() {
 
     const handleLogout = async () => {
         await logOut()
-        navigate("/")
+
+        enqueueSnackbar("Logged out", { variant: "success" })
+        navigate("/", { replace: true })
     }
 
     return (
@@ -57,6 +63,14 @@ function Header() {
                     </Heading>
                 </Link>
                 <HStack spacing={4}>
+                    {isLoggedIn && (
+                        <IconButton
+                            aria-label="Go to code editor"
+                            onClick={() => navigate("/code", { replace: true })}
+                            icon={<BiCodeAlt />}
+                            variant="ghost"
+                        />
+                    )}
                     <IconButton
                         aria-label="Toggle theme"
                         onClick={toggleColorMode}

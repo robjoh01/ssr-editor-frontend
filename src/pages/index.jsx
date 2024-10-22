@@ -11,20 +11,20 @@ import {
     TabPanel,
 } from "@chakra-ui/react"
 
-import { Login, SignUp } from "@components"
-import { useAuth } from "@hooks/AuthContext"
+import { Login, SignUp } from "@components/forms"
+import { useAuth } from "@/auth/index"
 
 import FancyText from "@carefully-coded/react-text-gradient"
 
 function Index() {
     const navigate = useNavigate()
-    const { isLoggedIn, user } = useAuth()
+    const { isLoggedIn } = useAuth()
 
     useLayoutEffect(() => {
         if (isLoggedIn) {
-            navigate("/dashboard", { replace: true })
+            navigate("/dashboard")
         }
-    }, [user, navigate])
+    }, [isLoggedIn, navigate])
 
     const [tabIndex, setTabIndex] = useState(0) // Control active tab
 

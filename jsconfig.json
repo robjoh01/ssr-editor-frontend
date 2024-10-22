@@ -5,6 +5,8 @@
         "paths": {
             "@/*": ["./src/*"],
             "@components/*": ["./src/components/*"],
+            "@auth/*": ["./src/auth/*"],
+            "@contexts/*": ["./src/contexts/*"],
             "@hooks/*": ["./src/hooks/*"],
             "@pages/*": ["./src/pages/*"],
             "@tests/*": ["./src/tests/*"],
