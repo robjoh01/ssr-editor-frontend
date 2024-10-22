@@ -1,14 +1,16 @@
 import React from "react"
-import { Link, useLocation } from "react-router-dom"
+
 import { Box, Heading, Text, Icon, Button } from "@chakra-ui/react"
 import { BiSolidGhost } from "react-icons/bi"
 
-function Error() {
-    const { state } = useLocation()
+import HttpError from "@/utils/httpError.js"
 
-    // Destructure with default values
-    const { status = 404, message = "An unexpected error occurred." } =
-        state || {}
+function Error({ error, resetErrorBoundary }) {
+    let status = 500
+
+    if (error instanceof HttpError) {
+        status = error.statusCode
+    }
 
     return (
         <Box
@@ -24,9 +26,9 @@ function Error() {
                 {status} Error
             </Heading>
             <Text fontSize="lg" color="gray.600">
-                {message}
+                {error.message}
             </Text>
-            <Button as={Link} mt={6} colorScheme="teal" to="..">
+            <Button mt={6} colorScheme="teal" onClick={resetErrorBoundary}>
                 Go Back
             </Button>
         </Box>

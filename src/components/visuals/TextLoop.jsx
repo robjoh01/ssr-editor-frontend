@@ -11,7 +11,7 @@ const TextLoop = ({ textElements, duration = 3000 }) => {
             duration
         )
         return () => clearTimeout(intervalId)
-    }, [textElements])
+    }, [textElements, duration])
 
     return (
         <TextTransition springConfig={presets.default}>

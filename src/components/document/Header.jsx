@@ -13,9 +13,9 @@ import {
 import { FaShareAlt } from "react-icons/fa" // FaFileAlt
 import { ChevronDownIcon } from "@chakra-ui/icons"
 
-import { ViewerList } from "@/components/document"
+import { ViewerList, DocumentSpinner } from "@/components/document"
 
-function Header({ title, setTitle, viewers }) {
+function Header({ title, setTitle, viewers, isProcessing }) {
     return (
         <HStack justifyContent="space-between" width="full">
             <HStack spacing={2} width="full">
@@ -48,8 +48,10 @@ function Header({ title, setTitle, viewers }) {
                     onChange={(e) => setTitle(e.target.value)}
                     fontWeight="bold"
                     size="md"
-                    maxWidth="300px"
+                    maxW="xl"
                 />
+
+                <DocumentSpinner isProcessing={isProcessing} />
             </HStack>
             <HStack>
                 <ViewerList viewers={viewers} />

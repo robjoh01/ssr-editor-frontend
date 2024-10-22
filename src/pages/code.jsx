@@ -1,25 +1,25 @@
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef } from "react"
 import { useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
 
 import {
-    Container,
     Box,
     Button,
-    HStack,
     VStack,
     Heading,
     Text,
     Grid,
     GridItem,
-    Spacer,
 } from "@chakra-ui/react"
 
 import { CodeEditor } from "@/components/actions"
 
 import { BeatLoader } from "react-spinners"
+import { useSnackbar } from "notistack"
 
 function CodePage() {
+    const { enqueueSnackbar } = useSnackbar()
+
     const editorRef = useRef()
 
     const [output, setOutput] = useState()
@@ -41,9 +41,7 @@ function CodePage() {
             setHasOutputError(data.stderr)
         },
         onError: (error) => {
-            // TODO: Add tost message
-
-            console.error(error)
+            enqueueSnackbar(error.message, { variant: "error" })
         },
     })
 
@@ -63,8 +61,9 @@ function CodePage() {
                             variant="outline"
                             colorScheme="green"
                             onClick={() => runCodeMutation.mutate()}
-                            isLoading={runCodeMutation.isLoading}
+                            isLoading={runCodeMutation.isPending}
                             loadingText="Updating"
+                            disabled={runCodeMutation.isPending}
                             spinner={<BeatLoader size={8} color="white" />}
                         >
                             Run Code
@@ -85,7 +84,9 @@ function CodePage() {
                                     <Text key={index}>{line}</Text>
                                 ))
                             ) : (
-                                <Text>Click "Run Code" to get output</Text>
+                                <Text>
+                                    Click &quot;Run Code&quot; to get output
+                                </Text>
                             )}
 
                             {hasOutputError && (

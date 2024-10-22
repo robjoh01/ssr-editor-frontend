@@ -8,10 +8,17 @@ import { ColorModeScript, ChakraProvider } from "@chakra-ui/react"
 import theme from "./theme"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            suspense: true,
+        },
+    },
+})
+import { SnackbarProvider } from "notistack"
 
 import { BrowserRouter } from "react-router-dom"
-import { AuthProvider } from "@hooks/AuthContext"
+import { AuthProvider } from "@/auth/index"
 
 const Main = () => {
     return (
@@ -22,7 +29,9 @@ const Main = () => {
                 />
                 <BrowserRouter basename={import.meta.env.VITE_BASENAME}>
                     <AuthProvider>
-                        <App />
+                        <SnackbarProvider>
+                            <App />
+                        </SnackbarProvider>
                     </AuthProvider>
                 </BrowserRouter>
             </ChakraProvider>

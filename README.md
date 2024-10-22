@@ -22,6 +22,7 @@ SSR-Editor is a real-time web application for creating and editing documents col
 - [React](https://react.dev)
 - [Chakra UI](https://chakra-ui.com)
 - [Quill](https://quilljs.com)
+- [notistack](https://notistack.com)
 - [Vite](https://vitejs.dev)
 - [Axios](https://axios-http.com)
 - [Socket.io](https://socket.io)
