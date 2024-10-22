@@ -29,8 +29,6 @@ import TextTruncate from "react-text-truncate"
 import { useSnackbar } from "notistack"
 import HttpError from "@/utils/httpError.js"
 
-import moment from "moment"
-
 function Dashboard() {
     const navigate = useNavigate()
     const { enqueueSnackbar } = useSnackbar()
@@ -289,10 +287,9 @@ function Dashboard() {
                                                   >
                                                       Created:
                                                   </Text>{" "}
-                                                  {moment(
-                                                      doc.createdAt,
-                                                      "YYYY-MM-DDTHH:mm:ss.sssZ"
-                                                  ).format()}
+                                                  {new Date(
+                                                      doc.createdAt
+                                                  ).toLocaleString()}
                                               </Text>
                                               <Text
                                                   fontSize="sm"
@@ -304,10 +301,9 @@ function Dashboard() {
                                                   >
                                                       Last Updated:
                                                   </Text>{" "}
-                                                  {moment(
-                                                      doc.updatedAt,
-                                                      "YYYY-MM-DDTHH:mm:ss.sssZ"
-                                                  ).format("YYYY/MM/DD")}
+                                                  {new Date(
+                                                      doc.updatedAt
+                                                  ).toLocaleString()}
                                               </Text>
                                           </VStack>
                                       </CardBody>

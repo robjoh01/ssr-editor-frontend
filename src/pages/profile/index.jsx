@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+
 import { useQuery, useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
 
@@ -17,6 +18,7 @@ import {
 
 import { Prompt } from "@/components/actions"
 import { BiArrowBack, BiReset } from "react-icons/bi"
+
 import { BeatLoader } from "react-spinners"
 import { useSnackbar } from "notistack"
 
@@ -213,7 +215,7 @@ function Profile() {
                                 Account Created
                             </Text>
                             <Text fontStyle="italic" color="gray.600">
-                                {new Date(createdAt).toLocaleDateString()}
+                                {new Date(createdAt).toLocaleString()}
                             </Text>
                         </Box>
 
@@ -222,7 +224,7 @@ function Profile() {
                                 Last Sign In
                             </Text>
                             <Text fontStyle="italic" color="gray.600">
-                                {new Date(lastLogin).toLocaleDateString()}
+                                {new Date(lastLogin).toLocaleString()}
                             </Text>
                         </Box>
 
@@ -268,7 +270,8 @@ function Profile() {
                     <HStack spacing={4} width="full">
                         <Button
                             type="submit"
-                            colorScheme="gray"
+                            variant="outline"
+                            colorScheme="green"
                             onClick={handleSubmit}
                             isLoading={updateUserMutation.isPending}
                             loadingText="Updating"
@@ -281,6 +284,7 @@ function Profile() {
                         <Button
                             type="button"
                             variant="outline"
+                            colorScheme="orange"
                             onClick={handleResetPassword}
                             rightIcon={<BiReset />}
                             width="full"
