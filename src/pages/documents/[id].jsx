@@ -4,28 +4,12 @@ import { useParams } from "react-router-dom"
 import io from "socket.io-client"
 import { useAuth } from "@/auth/index"
 
-import {
-    // Container,
-    // Box,
-    // useDisclosure,
-    // VStack,
-    Grid,
-    GridItem,
-    Spacer,
-} from "@chakra-ui/react"
+import { Grid, GridItem, Spacer } from "@chakra-ui/react"
 
-import {
-    DocumentHeader,
-    // DocumentFooter,
-    // Toc,
-    // Comments,
-    // CommentBubble,
-} from "@/components/document"
-
-import { TextEditor } from "@/components/actions"
 import { Loading } from "@/components/core"
+import { TextEditor } from "@/components/actions"
+import { DocumentHeader } from "@/components/document"
 
-// FIXME: Add prompt for share the document
 // FIXME: Add ability to comment on the document
 
 // TODO: Add table of contents
@@ -53,20 +37,18 @@ function DocumentPage() {
     const { id } = useParams()
 
     const [isPending, setIsPending] = useState(false)
-
-    const [isProcessing, setIsProcessing] = useState(false)
-
-    const inputRef = useRef(null)
-    const [socket, setSocket] = useState(null)
-
     const [title, setTitle] = useState("Untitled Document")
     const [content, setContent] = useState("")
 
-    // Debounce timer for saving
-    const saveTimeoutRef = useRef(null)
+    const inputRef = useRef(null)
+    const socketRef = useRef(null)
 
-    // Track last content to prevent unnecessary saves
+    const isProcessingRef = useRef(false)
+    const [isProcessing, setIsProcessing] = useState(false)
+
+    const saveTimeoutRef = useRef(null)
     const lastContentRef = useRef(null)
+    const processTimeout = useRef(null)
 
     useEffect(() => {
         const socket = io(import.meta.env.VITE_BACKEND_URL, {
@@ -77,24 +59,20 @@ function DocumentPage() {
 
         inputRef.current?.focus()
 
-        // Initialize the editor as disabled until the document is loaded
         editor.disable()
         editor.setText("Fetching...")
-        setSocket(socket)
+        socketRef.current = socket
         setIsPending(true)
 
-        // Join the room for the document
         socket.emit("join-room", id)
 
-        // Load the document once from the server
         socket.once("load-room", (document) => {
             editor.setContents(document.content)
-            editor.enable() // Enable editor after loading
+            editor.enable()
 
             setTitle(document.title)
             setContent(document.content)
-
-            lastContentRef.current = document.content // Save initial content state
+            lastContentRef.current = document.content
 
             setIsPending(false)
         })
@@ -103,19 +81,17 @@ function DocumentPage() {
             const cursors = editor.getModule("cursors")
 
             if (cursors) {
-                cursors.createCursor(userId, "User " + userId, "blue") // Custom cursor appearance
+                cursors.createCursor(userId, "User " + userId, "blue")
                 cursors.moveCursor(userId, range)
             }
         })
 
-        // Update the editor content when receiving changes from other users
         socket.on("receive-changes", (delta, receivedId) => {
             if (inputRef.current == null || id !== receivedId) return
             editor.updateContents(delta)
-            setIsProcessing(true)
+            setProcessingState(true) // Use ref to avoid re-rendering
         })
 
-        // Send local cursor changes to the server
         editor.on("selection-change", (range) => {
             if (range) {
                 socket.emit("cursor-update", { range, userId: socket.id })
@@ -124,45 +100,45 @@ function DocumentPage() {
 
         return () => {
             socket.emit("leave-room", id)
-
             socket.off("cursor-update")
             socket.off("receive-changes")
-
-            // Disconnect from the socket
             socket.disconnect()
         }
     }, [id])
 
-    // Handle content changes with debounce
+    // Update processing status using ref
+    const setProcessingState = (state) => {
+        isProcessingRef.current = state
+        // Set state for UI updates
+        setIsProcessing(state)
+    }
+
     const handleContentChange = (value, delta, source) => {
-        if (socket == null || source !== "user") return // Only handle user input
+        if (socketRef.current == null || source !== "user") return
 
-        // Send changes to other clients
-        socket.emit("send-changes", delta)
+        socketRef.current.emit("send-changes", delta)
 
-        // Clear the previous save timeout
         clearTimeout(saveTimeoutRef.current)
 
-        // Debounce: Save only if there are no changes for 2 seconds
         saveTimeoutRef.current = setTimeout(() => {
             if (value !== lastContentRef.current) {
                 const editor = inputRef.current.getEditor()
-                socket.emit("save-changes", editor.getContents()) // Send updated content to server
-                lastContentRef.current = editor.getContents() // Track the last saved content
-                setIsProcessing(true)
+                socketRef.current.emit("save-changes", editor.getContents())
+                lastContentRef.current = editor.getContents()
+                setProcessingState(true)
             }
         }, import.meta.env.VITE_SAVE_DELAY)
     }
-
-    const processTimeout = useRef(null)
 
     useEffect(() => {
         clearTimeout(processTimeout.current)
 
         // Hide spinner after 1.5 seconds
-        processTimeout.current = setTimeout(() => {
-            setIsProcessing(false)
-        }, 1500)
+        if (isProcessingRef.current) {
+            processTimeout.current = setTimeout(() => {
+                setProcessingState(false)
+            }, 1500)
+        }
     }, [isProcessing])
 
     if (isPending) {
@@ -181,8 +157,6 @@ function DocumentPage() {
                     onChange={handleContentChange}
                     userId={123}
                     userName={"User 123"}
-                    onAddComment={onAddComment}
-                    onClickedComments={onClickedComments}
                 />
             </GridItem>
             <GridItem>

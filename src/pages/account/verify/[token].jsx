@@ -28,6 +28,7 @@ function CreateAccount() {
     const { token } = useParams()
 
     const [isVerify, setIsVerify] = useState(false)
+    const [countdown, setCountdown] = useState(0)
     const [email, setEmail] = useState("")
 
     const [name, setName] = useState("")
@@ -45,8 +46,19 @@ function CreateAccount() {
     const verifyMutation = useMutation({
         mutationFn: () => axios.post("/auth/signUp/verify", { token }),
         onSuccess: ({ data }) => {
+            console.log(data)
+
             setIsVerify(true)
             setEmail(data.email)
+
+            // Current time in seconds
+            const now = Math.floor(Date.now() / 1000)
+
+            // Calculate remaining time
+            const remainingSeconds = data.expirationTime - now
+            const remainingHours = remainingSeconds / 3600
+
+            setCountdown(Math.round(remainingHours))
         },
         onError: (error) => {
             const errorMessage =
@@ -165,6 +177,9 @@ function CreateAccount() {
                 <Heading as="h1" size="lg" textAlign="center">
                     Create Your Account
                 </Heading>
+                <Text fontSize="md" textAlign="center">
+                    {countdown} hours remaining.
+                </Text>
                 <Text fontSize="sm" textAlign="center">
                     Please set a password for your account.
                 </Text>
