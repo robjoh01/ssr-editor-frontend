@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
 import validator from "validator"
 
@@ -43,36 +43,38 @@ function CreateAccount() {
     const { enqueueSnackbar } = useSnackbar()
     const { showBoundary } = useErrorBoundary()
 
-    const verifyMutation = useMutation({
-        mutationFn: () => axios.post("/auth/signUp/verify", { token }),
-        onSuccess: ({ data }) => {
-            console.log(data)
-
-            setIsVerify(true)
-            setEmail(data.email)
-
-            // Current time in seconds
-            const now = Math.floor(Date.now() / 1000)
-
-            // Calculate remaining time
-            const remainingSeconds = data.expirationTime - now
-            const remainingHours = remainingSeconds / 3600
-
-            setCountdown(Math.round(remainingHours))
-        },
-        onError: (error) => {
-            const errorMessage =
-                error.response?.data || "An unknown error occurred"
-
-            showBoundary(new Error(errorMessage))
-        },
+    const verifyQuery = useQuery({
+        queryKey: ["verifyAccount", token],
+        queryFn: () =>
+            axios
+                .post("/auth/signUp/verify", { token })
+                .then((res) => res.data),
+        enabled: !!token,
+        cacheTime: 1000 * 60 * 5, // Cache the result for 5 minutes
     })
 
     useEffect(() => {
-        if (token) {
-            verifyMutation.mutate()
-        }
-    }, [token, verifyMutation])
+        if (!verifyQuery.data) return
+
+        setIsVerify(true)
+        setEmail(verifyQuery.data.email)
+
+        // Calculate countdown
+        const now = Math.floor(Date.now() / 1000)
+        const remainingSeconds = verifyQuery.data.expirationTime - now
+        const remainingHours = remainingSeconds / 3600
+
+        setCountdown(Math.round(remainingHours))
+    }, [verifyQuery.data])
+
+    useEffect(() => {
+        if (!verifyQuery.error) return
+
+        const errorMessage =
+            verifyQuery.error?.response?.data || "An unknown error occurred"
+
+        showBoundary(new Error(errorMessage))
+    }, [verifyQuery.error])
 
     useEffect(() => {
         if (name === "") {
