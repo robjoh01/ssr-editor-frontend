@@ -72,11 +72,14 @@ function Dashboard() {
     })
 
     useEffect(() => {
-        const { errors } = myselfQuery.data.data
+        const { errors } = myselfQuery.data?.data || {}
 
-        errors.forEach((error) => {
-            showBoundary(new ResponseError(error.message, 500))
-        })
+        if (Array.isArray(errors) && errors.length > 0) {
+            errors.forEach((error) => {
+                showBoundary(new ResponseError(error.message, 500))
+                return
+            })
+        }
     }, [myselfQuery.data, showBoundary])
 
     const newDocumentMutation = useMutation({
