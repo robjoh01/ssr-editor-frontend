@@ -91,7 +91,7 @@ function Dashboard() {
         onSuccess: ({ data }) => {
             enqueueSnackbar("Document created", { variant: "success" })
 
-            navigate(`/document/${data._id}`)
+            navigate(`/documents/${data._id}`)
         },
         onError: (error) => {
             const errorMessage =
@@ -104,9 +104,7 @@ function Dashboard() {
     })
 
     const deleteDocumentMutation = useMutation({
-        mutationFn: (id) => {
-            return axios.delete(`documents/${id}`)
-        },
+        mutationFn: (id) => axios.delete(`documents/${id}/delete`),
         onSuccess: () => {
             enqueueSnackbar("Document deleted", { variant: "success" })
 
@@ -242,7 +240,7 @@ function Dashboard() {
                     : // Render the actual documents once the data is loaded
                       documents?.map((doc) => (
                           <GridItem key={doc.id}>
-                              <Link to={`/document/${doc.id}`}>
+                              <Link to={`/documents/${doc.id}`}>
                                   <PortraitCard>
                                       <CardHeader
                                           display="flex"
