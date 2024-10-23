@@ -12,7 +12,6 @@ import {
     GridItem,
     Text,
     Button,
-    Heading,
     VStack,
     HStack,
     IconButton,
@@ -27,11 +26,14 @@ import PortraitCard from "@/components/visuals/PortraitCard.jsx"
 import TextTruncate from "react-text-truncate"
 
 import { useSnackbar } from "notistack"
-import HttpError from "@/utils/httpError.js"
+import { useErrorBoundary } from "react-error-boundary"
+import ResponseError from "@/utils/responseError.js"
 
 function Dashboard() {
     const navigate = useNavigate()
+
     const { enqueueSnackbar } = useSnackbar()
+    const { showBoundary } = useErrorBoundary()
 
     const [activeFilters, setActiveFilters] = useState(["owned", "shared"])
     const [sortOption, setSortOption] = useState("lastUpdated")
@@ -70,10 +72,12 @@ function Dashboard() {
     })
 
     useEffect(() => {
-        if (myselfQuery.data.data.errors) {
-            throw new HttpError(myselfQuery.data.data.errors[0].message, 500)
-        }
-    }, [myselfQuery.data])
+        const { errors } = myselfQuery.data.data
+
+        errors.forEach((error) => {
+            showBoundary(new ResponseError(error.message, 500))
+        })
+    }, [myselfQuery.data, showBoundary])
 
     const newDocumentMutation = useMutation({
         mutationFn: () => {
@@ -87,7 +91,10 @@ function Dashboard() {
             navigate(`/document/${data._id}`)
         },
         onError: (error) => {
-            enqueueSnackbar(`Failed to create document: ${error.message}`, {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to create document: ${errorMessage}`, {
                 variant: "error",
             })
         },
@@ -104,7 +111,10 @@ function Dashboard() {
             myselfQuery.refetch()
         },
         onError: (error) => {
-            enqueueSnackbar(`Failed to delete document: ${error.message}`, {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to delete document: ${errorMessage}`, {
                 variant: "error",
             })
         },
@@ -238,14 +248,12 @@ function Dashboard() {
                                           alignItems="center"
                                           pb={2}
                                       >
-                                          <Heading size="md" fontWeight="bold">
-                                              <TextTruncate
-                                                  line={2}
-                                                  element="span"
-                                                  truncateText="..."
-                                                  text={doc.title}
-                                              />
-                                          </Heading>
+                                          <TextTruncate
+                                              line={1}
+                                              element="span"
+                                              truncateText="…"
+                                              text={doc.title}
+                                          />
                                           <IconButton
                                               icon={<BiTrash />}
                                               variant="ghost"

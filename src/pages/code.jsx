@@ -27,21 +27,28 @@ function CodePage() {
 
     const runCodeMutation = useMutation({
         mutationFn: () => {
-            return axios.post("https://execjs.emilfolino.se/code", {
-                code: btoa(editorRef.current.getValue()),
-            })
+            return axios.post(
+                "https://execjs.emilfolino.se/code",
+                {
+                    code: btoa(editorRef.current.getValue()),
+                },
+                {
+                    withCredentials: false,
+                }
+            )
         },
-        onSuccess: ({ data }) => {
-            console.log(data)
-
-            const decodedOutput = atob(data.output)
-            console.log(decodedOutput)
-
+        onSuccess: ({ data: output }) => {
+            const decodedOutput = atob(output.data)
             setOutput(decodedOutput ? decodedOutput.split("\n") : [])
-            setHasOutputError(data.stderr)
+            setHasOutputError(output.stderr)
         },
         onError: (error) => {
-            enqueueSnackbar(error.message, { variant: "error" })
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to run code: ${errorMessage}`, {
+                variant: "error",
+            })
         },
     })
 
