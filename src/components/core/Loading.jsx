@@ -1,6 +1,7 @@
 import React from "react"
 
-import { Box } from "@chakra-ui/react"
+import { Box, useColorMode, useColorModeValue } from "@chakra-ui/react"
+
 import { ScaleLoader } from "react-spinners"
 
 function Loading() {
@@ -12,7 +13,7 @@ function Loading() {
             justifyContent="center"
         >
             <ScaleLoader
-                color="#000000"
+                color={useColorModeValue("#000000", "#ffffff")}
                 loading
                 size={30}
                 cssOverride={{

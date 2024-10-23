@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
+import validator from "validator"
 
 import {
     VStack,
@@ -19,15 +20,18 @@ import { BiArrowBack, BiReset } from "react-icons/bi"
 
 import { BeatLoader } from "react-spinners"
 import { useSnackbar } from "notistack"
-import validator from "validator"
+import { useErrorBoundary } from "react-error-boundary"
+import { Loading } from "@/components/core"
 
-function ResetAccount() {
+function CreateAccount() {
     const navigate = useNavigate()
+    const { token } = useParams()
 
-    useQuery({
-        queryKey: ["user"],
-        queryFn: () => axios.get("/auth/myself"),
-    })
+    const [isVerify, setIsVerify] = useState(false)
+    const [email, setEmail] = useState("")
+
+    const [name, setName] = useState("")
+    const [nameError, setNameError] = useState()
 
     const [password, setPassword] = useState("")
     const [passwordError, setPasswordError] = useState()
@@ -36,6 +40,36 @@ function ResetAccount() {
     const [confirmPasswordError, setConfirmPasswordError] = useState()
 
     const { enqueueSnackbar } = useSnackbar()
+    const { showBoundary } = useErrorBoundary()
+
+    const verifyMutation = useMutation({
+        mutationFn: () => axios.post("/auth/signUp/verify", { token }),
+        onSuccess: ({ data }) => {
+            setIsVerify(true)
+            setEmail(data.email)
+        },
+        onError: (error) => {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            showBoundary(new Error(errorMessage))
+        },
+    })
+
+    useEffect(() => {
+        if (token) {
+            verifyMutation.mutate()
+        }
+    }, [token, verifyMutation])
+
+    useEffect(() => {
+        if (name === "") {
+            setNameError("Name is required")
+            return
+        }
+
+        setNameError()
+    }, [name])
 
     useEffect(() => {
         if (password === "") {
@@ -65,25 +99,46 @@ function ResetAccount() {
         setConfirmPasswordError()
     }, [password, confirmPassword])
 
-    // Mutation for resetting the password
-    const resetPasswordMutation = useMutation({
-        mutationFn: () =>
-            axios.put("/auth/myself", {
-                password,
-            }),
+    // Mutation for logging in
+    const loginMutation = useMutation({
+        mutationFn: () => axios.post("/auth/login", { email, password }),
         onSuccess: () => {
-            enqueueSnackbar("Password was successfully reset", {
-                variant: "success",
-            })
+            enqueueSnackbar("Login successful", { variant: "success" })
 
-            // Redirect to profile after successful reset
-            navigate("/profile", { replace: true })
+            // Redirect to dashboard after successful login
+            navigate("/dashboard", { replace: true })
         },
         onError: (error) => {
             const errorMessage =
                 error.response?.data || "An unknown error occurred"
 
-            enqueueSnackbar(`Failed to reset password: ${errorMessage}`, {
+            enqueueSnackbar(`Failed to login: ${errorMessage}`, {
+                variant: "error",
+            })
+        },
+    })
+
+    // Mutation for creating an account
+    const createAccountMutation = useMutation({
+        mutationFn: () =>
+            axios.post("/auth/signUp/complete", {
+                name,
+                email,
+                password,
+                token,
+            }),
+        onSuccess: () => {
+            enqueueSnackbar("Account created successfully!", {
+                variant: "success",
+            })
+
+            loginMutation.mutate()
+        },
+        onError: (error) => {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to create account: ${errorMessage}`, {
                 variant: "error",
             })
         },
@@ -92,9 +147,10 @@ function ResetAccount() {
     const handleSubmit = (e) => {
         e.preventDefault()
 
-        // Call mutation to reset the password
-        resetPasswordMutation.mutate()
+        createAccountMutation.mutate()
     }
+
+    if (!isVerify) return <Loading />
 
     return (
         <Box
@@ -107,14 +163,33 @@ function ResetAccount() {
         >
             <VStack spacing={6} align="stretch">
                 <Heading as="h1" size="lg" textAlign="center">
-                    Reset Password
+                    Create Your Account
                 </Heading>
                 <Text fontSize="sm" textAlign="center">
-                    Enter a new password for your account.
+                    Please set a password for your account.
                 </Text>
 
                 <VStack width="full">
-                    <FormControl isInvalid={passwordError}>
+                    <FormControl isReadOnly>
+                        <FormLabel htmlFor="email">Email</FormLabel>
+                        <Input id="email" type="email" value={email} readOnly />
+                    </FormControl>
+
+                    <FormControl mt={4} isInvalid={nameError}>
+                        <FormLabel htmlFor="name">Name</FormLabel>
+                        <Input
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter your name"
+                        />
+                        {nameError && (
+                            <FormErrorMessage>{nameError}</FormErrorMessage>
+                        )}
+                    </FormControl>
+
+                    <FormControl mt={4} isInvalid={passwordError}>
                         <FormLabel htmlFor="password">New Password</FormLabel>
                         <Input
                             id="password"
@@ -153,22 +228,27 @@ function ResetAccount() {
                             type="submit"
                             leftIcon={<BiReset />}
                             spinner={<BeatLoader size={8} color="white" />}
-                            isLoading={resetPasswordMutation.isPending}
-                            loadingText="Resetting"
-                            isDisabled={resetPasswordMutation.isPending}
+                            isLoading={createAccountMutation.isPending}
+                            loadingText="Creating Account"
+                            isDisabled={
+                                createAccountMutation.isPending ||
+                                !email ||
+                                nameError ||
+                                passwordError ||
+                                confirmPasswordError ||
+                                !token
+                            }
                         >
-                            Reset Password
+                            Create Account
                         </Button>
 
                         <Button
                             mt={4}
                             variant="link"
                             leftIcon={<BiArrowBack />}
-                            onClick={() =>
-                                navigate("/profile", { replace: true })
-                            }
+                            onClick={() => navigate("/", { replace: true })}
                         >
-                            Back to Profile
+                            Back to Signup
                         </Button>
                     </VStack>
                 </VStack>
@@ -177,4 +257,4 @@ function ResetAccount() {
     )
 }
 
-export default ResetAccount
+export default CreateAccount

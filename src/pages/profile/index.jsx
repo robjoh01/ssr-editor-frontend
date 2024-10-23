@@ -61,7 +61,10 @@ function Profile() {
             userQuery.refetch()
         },
         onError: (error) => {
-            enqueueSnackbar(`Failed to update user: ${error.message}`, {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to update user: ${errorMessage}`, {
                 variant: "error",
             })
         },
@@ -86,7 +89,10 @@ function Profile() {
             navigate("/", { replace: true })
         },
         onError: (error) => {
-            enqueueSnackbar(`Failed to delete user: ${error.message}`, {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to delete user: ${errorMessage}`, {
                 variant: "error",
             })
         },
@@ -106,7 +112,7 @@ function Profile() {
         setCreatedAt(createdAt)
         setLastLogin(lastLogin)
         setStats(stats)
-    }, [userQuery.data])
+    }, [userQuery.data, navigate])
 
     const handleSubmit = async (e) => {
         e.preventDefault()

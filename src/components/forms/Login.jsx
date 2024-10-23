@@ -48,7 +48,10 @@ function Login({ setTabIndex }) {
             navigate("/dashboard", { replace: true })
         },
         onError: (error) => {
-            enqueueSnackbar(`Failed to login: ${error.message}`, {
+            const errorMessage =
+                error.response?.data || "An unknown error occurred"
+
+            enqueueSnackbar(`Failed to login: ${errorMessage}`, {
                 variant: "error",
             })
         },
@@ -137,12 +140,6 @@ function Login({ setTabIndex }) {
                         Don&apos;t have an account? Sign up
                     </Button>
                 </VStack>
-
-                {loginMutation.error && (
-                    <Text color="red.500" fontSize="sm">
-                        {loginMutation.error.message}
-                    </Text>
-                )}
             </VStack>
         </Box>
     )
