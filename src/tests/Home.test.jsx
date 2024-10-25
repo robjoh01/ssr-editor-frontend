@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import Home from "../old_pages/home"
 import About from "../pages/about"
 
 const queryClient = new QueryClient()
