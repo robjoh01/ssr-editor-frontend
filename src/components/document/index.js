@@ -1,21 +1,13 @@
+// Core
 import Header from "./Header"
 import Footer from "./Footer"
 
-import Spinner from "./Spinner"
-import Share from "./Share"
+// Modals
+import ShareWindow from "./ShareWindow"
+import CommentHistory from "./CommentHistory"
+// import Toc from "./Toc"
 
-import Toc from "./Toc"
-import Comments from "./Comments"
-import CommentBubble from "./CommentBubble"
+// Misc
 import ViewerList from "./ViewerList"
 
-export {
-    Header as DocumentHeader,
-    Footer as DocumentFooter,
-    Spinner as DocumentSpinner,
-    Share as DocumentShare,
-    Toc,
-    Comments,
-    CommentBubble,
-    ViewerList,
-}
+export { Header, Footer, ShareWindow, CommentHistory, ViewerList }

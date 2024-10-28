@@ -74,7 +74,7 @@ function CreateAccount() {
             verifyQuery.error?.response?.data || "An unknown error occurred"
 
         showBoundary(new Error(errorMessage))
-    }, [verifyQuery.error])
+    }, [verifyQuery.error, showBoundary])
 
     useEffect(() => {
         if (name === "") {

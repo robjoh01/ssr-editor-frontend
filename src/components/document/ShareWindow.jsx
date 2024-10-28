@@ -22,7 +22,7 @@ import { useSnackbar } from "notistack"
 
 const SAVE_DELAY = 2000
 
-function Share({ isOpen, onClose }) {
+function ShareWindow({ isOpen, onClose }) {
     const { enqueueSnackbar } = useSnackbar()
     const [input, setInput] = useState("")
     const [debouncedInput, setDebouncedInput] = useState(input)
@@ -239,4 +239,4 @@ function Share({ isOpen, onClose }) {
     )
 }
 
-export default Share
+export default ShareWindow

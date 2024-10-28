@@ -16,15 +16,16 @@ import {
     FormLabel,
 } from "@chakra-ui/react"
 
-import { Prompt } from "@/components/actions"
 import { BiArrowBack, BiReset } from "react-icons/bi"
 
 import { BeatLoader } from "react-spinners"
 import { useSnackbar } from "notistack"
+import { usePrompt } from "@/systems/Prompt"
 
 function Profile() {
     const navigate = useNavigate()
     const { enqueueSnackbar } = useSnackbar()
+    const { showPrompt } = usePrompt()
 
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
@@ -34,17 +35,6 @@ function Profile() {
         totalDocuments: 0,
         totalEdits: 0,
         totalComments: 0,
-    })
-
-    const [prompt, setPrompt] = useState({
-        isOpen: false,
-        title: "",
-        message: "",
-        confirmText: "",
-        cancelText: "",
-        isLoading: false,
-        loadingText: "",
-        confirmAction: null,
     })
 
     const userQuery = useQuery({
@@ -124,33 +114,29 @@ function Profile() {
     }
 
     const handleResetPassword = () => {
-        setPrompt({
-            isOpen: true,
+        showPrompt({
             title: "Reset Password",
             message: "Are you sure you want to reset your password?",
             confirmText: "Reset",
             cancelText: "Cancel",
-            isLoading: false,
-            loadingText: "Loading",
-            confirmAction: () => {
+            onConfirm: () => {
                 navigate("/profile/reset", { replace: true })
             },
+            loadingText: "Navigating",
         })
     }
 
     const handleDeleteAccount = () => {
-        setPrompt({
-            isOpen: true,
+        showPrompt({
             title: "Delete Account",
             message:
                 "Are you sure you want to delete your account? This action cannot be undone.",
             confirmText: "Delete",
             cancelText: "Cancel",
-            isLoading: deleteUserMutation.isPending,
-            loadingText: "Deleting",
-            confirmAction: () => {
+            onConfirm: () => {
                 deleteUserMutation.mutate()
             },
+            loadingText: "Deleting",
         })
     }
 
@@ -163,22 +149,6 @@ function Profile() {
             mx="auto"
             p={8}
         >
-            {prompt.isOpen && (
-                <Prompt
-                    isOpen={prompt.isOpen}
-                    onClose={() =>
-                        setPrompt((prev) => ({ ...prev, isOpen: false }))
-                    }
-                    onConfirm={prompt.confirmAction}
-                    title={prompt.title}
-                    message={prompt.message}
-                    isLoading={prompt.isLoading}
-                    loadingText={prompt.loadingText}
-                    confirmText={prompt.confirmText}
-                    cancelText={prompt.cancelText}
-                />
-            )}
-
             <VStack spacing={6} align="stretch">
                 <Heading as="h1" size="lg" textAlign="center">
                     Your Profile

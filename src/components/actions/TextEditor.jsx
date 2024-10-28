@@ -7,9 +7,6 @@ const { Quill } = ReactQuill
 import QuillCursors from "quill-cursors"
 Quill.register("modules/cursors", QuillCursors)
 
-import "quill-comment/quill.comment.js"
-import "quill-comment/quill.comment.css"
-
 const modules = {
     toolbar: [
         [{ font: [] }],
@@ -26,8 +23,6 @@ const modules = {
             { indent: "+1" },
         ],
         ["link", "image", "video", "formula"],
-        ["comments-add"],
-        ["comments-toggle"],
     ],
     history: {
         delay: 2500,
@@ -56,41 +51,16 @@ const formats = [
     "background",
     "align",
     "code-block",
-    "comments-add",
-    "comments-toggle",
 ]
 
-function commentServerTimestamp() {
-    // call from server or local time. But must return promise with UNIX Epoch timestamp resolved (like 1507617041)
-    return new Promise((resolve) => {
-        const currentTimestamp = Math.round(new Date().getTime() / 1000)
-
-        resolve(currentTimestamp)
-    })
-}
-
-const TextEditor = forwardRef(function TextEditor(
-    { value, onChange, userId, userName, onAddComment, onClickedComments },
-    ref
-) {
+const TextEditor = forwardRef(function TextEditor({ value, onChange }, ref) {
     return (
         <ReactQuill
             ref={ref}
             theme="snow"
             value={value}
             onChange={onChange}
-            modules={{
-                ...modules,
-                comment: {
-                    enabled: true,
-                    commentAuthorId: userId,
-                    commentAddOn: userName,
-                    color: "yellow",
-                    commentAddClick: onAddComment,
-                    commentsClick: onClickedComments,
-                    commentTimestamp: commentServerTimestamp,
-                },
-            }}
+            modules={modules}
             formats={formats}
         />
     )

@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react"
 
 import { Login, SignUp } from "@components/forms"
-import { useAuth } from "@/auth/index"
+import { useAuth } from "@/systems/Auth"
 
 import FancyText from "@carefully-coded/react-text-gradient"
 

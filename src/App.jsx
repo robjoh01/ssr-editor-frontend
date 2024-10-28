@@ -6,6 +6,7 @@ import { Container, Grid, GridItem } from "@chakra-ui/react"
 
 import { Header, Footer, Loading, Error } from "@/components/core"
 import { ErrorBoundary } from "react-error-boundary"
+import { PromptProvider } from "@/systems/Prompt"
 
 function App() {
     const navigate = useNavigate()
@@ -27,14 +28,14 @@ function App() {
                             //     navigate(0)
                             //     return
                             // }
-
-                            console.log(details)
-                            navigate(-1)
+                            console.error(details)
                         }}
                     >
-                        <Suspense fallback={<Loading />}>
-                            {useRoutes(routes)}
-                        </Suspense>
+                        <PromptProvider>
+                            <Suspense fallback={<Loading />}>
+                                {useRoutes(routes)}
+                            </Suspense>
+                        </PromptProvider>
                     </ErrorBoundary>
                 </Container>
             </GridItem>

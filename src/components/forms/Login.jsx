@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import { useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
-import { useAuth } from "@/auth/index"
+import { useAuth } from "@/systems/Auth"
 import { authWithGithub, authWithGoogle } from "@/utils/api/auth"
 
 import {
