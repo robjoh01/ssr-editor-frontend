@@ -18,7 +18,7 @@ import { SyncLoader } from "react-spinners"
 // Icons
 import { BiSolidShareAlt, BiChevronDown } from "react-icons/bi"
 
-function Header({ title, onTitleChange, isProcessing, viewers }) {
+function Header({ documentId, title, onTitleChange, isProcessing, viewers }) {
     const shareModal = useDisclosure()
 
     return (
@@ -73,6 +73,7 @@ function Header({ title, onTitleChange, isProcessing, viewers }) {
 
             {/* Share Modal */}
             <ShareWindow
+                documentId={documentId}
                 isOpen={shareModal.isOpen}
                 onClose={shareModal.onClose}
             />

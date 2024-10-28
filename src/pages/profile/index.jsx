@@ -22,10 +22,13 @@ import { BeatLoader } from "react-spinners"
 import { useSnackbar } from "notistack"
 import { usePrompt } from "@/systems/Prompt"
 
+import { useAuth } from "@/systems/Auth"
+
 function Profile() {
     const navigate = useNavigate()
     const { enqueueSnackbar } = useSnackbar()
     const { showPrompt } = usePrompt()
+    const { fetchUser } = useAuth()
 
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
@@ -62,7 +65,7 @@ function Profile() {
 
     const deleteUserMutation = useMutation({
         mutationFn: () => axios.delete("/auth/myself"),
-        onSuccess: () => {
+        onSuccess: async () => {
             enqueueSnackbar("User deleted", { variant: "success" })
 
             // Optionally, clear user data after successful deletion
@@ -75,6 +78,8 @@ function Profile() {
                 totalEdits: 0,
                 totalComments: 0,
             })
+
+            await fetchUser()
 
             navigate("/", { replace: true })
         },

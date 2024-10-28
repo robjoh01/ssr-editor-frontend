@@ -4,15 +4,28 @@ import Dialog from "@/components/actions/Dialog"
 
 const PromptContext = createContext()
 
+/**
+ * Custom hook to use the prompt context.
+ * @returns {Object} The context value containing prompt functions and state.
+ * @throws {Error} If used outside of a PromptProvider.
+ */
 export const usePrompt = () => {
     const promptContext = useContext(PromptContext)
 
     if (!promptContext)
-        throw new Error("usePrompt must be used within an PromptProvider")
+        throw new Error(
+            "usePrompt must be used within an PromptProvider. Make sure you wrap your app with the  PromptProvider component."
+        )
 
     return promptContext
 }
 
+/**
+ * Provides a context with methods to show and hide a prompt dialog.
+ * @param {Object} props - The props for the provider.
+ * @param {React.ReactNode} props.children - The children components to render.
+ * @returns {JSX.Element} The provider component wrapping its children.
+ */
 export const PromptProvider = ({ children }) => {
     const [isPromptOpen, setIsPromptOpen] = useState(false)
     const [promptContent, setPromptContent] = useState({
@@ -61,10 +74,12 @@ export const PromptProvider = ({ children }) => {
         setIsPromptOpen(true)
     }
 
+    // Hides the prompt dialog
     const hidePrompt = () => {
         setIsPromptOpen(false)
     }
 
+    // Handles confirm button click, executing the onConfirm callback if available
     const handleConfirm = () => {
         if (confirmActionRef.current) {
             confirmActionRef.current()

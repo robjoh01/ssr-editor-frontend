@@ -10,6 +10,7 @@ import {
     Select,
     Grid,
     GridItem,
+    Heading,
     Text,
     Button,
     VStack,
@@ -26,7 +27,6 @@ import {
 import { BiPlus, BiTrash } from "react-icons/bi"
 
 import PortraitCard from "@/components/visuals/PortraitCard.jsx"
-import TextTruncate from "react-text-truncate"
 
 import { useSnackbar } from "notistack"
 import { useErrorBoundary } from "react-error-boundary"
@@ -43,7 +43,6 @@ function Dashboard() {
     const [activeFilters, setActiveFilters] = useState(["owned", "shared"])
     const [sortOption, setSortOption] = useState("lastUpdated")
     const [documents, setDocuments] = useState([])
-    const [skeletonCount] = useState(5)
 
     const myselfQuery = useQuery({
         queryKey: ["myself"],
@@ -258,7 +257,7 @@ function Dashboard() {
 
                 {/* Document Cards */}
                 {myselfQuery.isPending || myselfQuery.isRefetching
-                    ? [...Array(skeletonCount)].map((_, idx) => (
+                    ? [...Array(5)].map((_, idx) => (
                           <GridItem key={idx}>
                               <Skeleton height="200px" />
                           </GridItem>
@@ -280,12 +279,13 @@ function Dashboard() {
                                           as={Link}
                                           to={`/documents/${doc.id}`}
                                       >
-                                          <TextTruncate
-                                              line={1}
-                                              element="span"
-                                              truncateText="…"
-                                              text={doc.title}
-                                          />
+                                          <Heading
+                                              as="h3"
+                                              size="sm"
+                                              noOfLines={1}
+                                          >
+                                              {doc.title}
+                                          </Heading>
                                       </ChakraLink>
 
                                       <IconButton

@@ -24,11 +24,7 @@ function App() {
                     <ErrorBoundary
                         FallbackComponent={Error}
                         onReset={(details) => {
-                            // if (details.error.message === "Invalid User") {
-                            //     navigate(0)
-                            //     return
-                            // }
-                            console.error(details)
+                            navigate("/")
                         }}
                     >
                         <PromptProvider>

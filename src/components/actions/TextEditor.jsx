@@ -1,13 +1,23 @@
 import React, { forwardRef } from "react"
-import ReactQuill from "react-quill"
-import "react-quill/dist/quill.snow.css"
+import ReactQuill from "react-quill-new"
+import "react-quill-new/dist/quill.snow.css"
 
 const { Quill } = ReactQuill
 
 import QuillCursors from "quill-cursors"
 Quill.register("modules/cursors", QuillCursors)
 
+/**
+ * @typedef {import("react-quill").Quill} Quill
+ * @typedef {import("react-quill").EditorProps} EditorProps
+ * @typedef {import("react-quill").Format} Format
+ */
+
 const modules = {
+    /**
+     * Custom toolbar configuration
+     * @type {import("react-quill").Format[]}
+     */
     toolbar: [
         [{ font: [] }],
         [{ header: [1, 2, false] }],
@@ -24,13 +34,27 @@ const modules = {
         ],
         ["link", "image", "video", "formula"],
     ],
+
+    /**
+     * Custom history configuration
+     * @type {import("react-quill").HistoryConfig}
+     */
     history: {
         delay: 2500,
         userOnly: true,
     },
+
+    /**
+     * Enable real-time collaboration cursors
+     * @type {boolean}
+     */
     cursors: true,
 }
 
+/**
+ * List of formats to support in the editor
+ * @type {Format[]}
+ */
 const formats = [
     "header",
     "font",
@@ -41,7 +65,6 @@ const formats = [
     "strike",
     "blockquote",
     "list",
-    "bullet",
     "indent",
     "link",
     "image",
@@ -53,6 +76,10 @@ const formats = [
     "code-block",
 ]
 
+/**
+ * Custom text editor component
+ * @extends {React.ForwardRefExoticComponent<EditorProps & React.RefAttributes<Quill>>}
+ */
 const TextEditor = forwardRef(function TextEditor({ value, onChange }, ref) {
     return (
         <ReactQuill

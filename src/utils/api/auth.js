@@ -19,16 +19,28 @@ export async function login(email, password) {
     return { data, status, statusText }
 }
 
+/**
+ * Logout the user
+ * @returns {Promise<{data: *, status: number, statusText: string}>}
+ */
 export async function logout() {
     const { data, status, statusText } = await axios.get("/auth/logout")
     return { data, status, statusText }
 }
 
+/**
+ * Authenticate the user with github
+ * @returns {Promise<{data: *, status: number, statusText: string}>}
+ */
 export async function authWithGithub() {
     const { data, status, statusText } = await axios.get("/auth/github")
     return { data, status, statusText }
 }
 
+/**
+ * Authenticate the user with google
+ * @returns {Promise<{data: *, status: number, statusText: string}>}
+ */
 export async function authWithGoogle() {
     const { data, status, statusText } = await axios.get("/auth/google")
     return { data, status, statusText }

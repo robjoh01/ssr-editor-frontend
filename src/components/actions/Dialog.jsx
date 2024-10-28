@@ -11,6 +11,21 @@ import {
     Text,
 } from "@chakra-ui/react"
 
+/**
+ * A dialog component that displays a message and allows the user to
+ * confirm or cancel. It handles displaying a loading state and disabling
+ * the confirm button when the loading state is on.
+ *
+ * @param {boolean} isOpen - Whether the dialog should be open
+ * @param {function} onClose - Callback to close the dialog
+ * @param {function} onConfirm - Callback to call when confirm is clicked
+ * @param {string} title - The title of the dialog
+ * @param {string} message - The message to display in the dialog
+ * @param {string} confirmText - The text for the confirm button
+ * @param {string} cancelText - The text for the cancel button
+ * @param {boolean} isLoading - Whether the confirm button is in a loading state
+ * @param {string} loadingText - The text to display when the confirm button is in a loading state
+ */
 function Dialog({
     isOpen,
     onClose,

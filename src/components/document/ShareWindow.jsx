@@ -20,9 +20,7 @@ import {
 } from "@chakra-ui/react"
 import { useSnackbar } from "notistack"
 
-const SAVE_DELAY = 2000
-
-function ShareWindow({ isOpen, onClose }) {
+function ShareWindow({ documentId, isOpen, onClose }) {
     const { enqueueSnackbar } = useSnackbar()
     const [input, setInput] = useState("")
     const [debouncedInput, setDebouncedInput] = useState(input)
@@ -45,14 +43,14 @@ function ShareWindow({ isOpen, onClose }) {
 
         const response = await axios.post("/graphql", {
             query: `
-                query EmailQuery($email: String!) {
-                    usersByEmail(email: $email) {
+                query EmailQuery($email: String!, $documentId: ID!) {
+                    findUsersForDocument(email: $email, documentId: $documentId) {
                         name,
                         email
                     }
                 }
             `,
-            variables: { email: debouncedInput },
+            variables: { email: debouncedInput, documentId },
         })
 
         return response.data
@@ -74,26 +72,24 @@ function ShareWindow({ isOpen, onClose }) {
                 canWrite: user.canWrite,
             }))
 
-            await axios.post("/graphql", {
-                query: `
-                    mutation ShareDocument($emails: [UserInput!]!) {
-                        shareDocument(emails: $emails) {
-                            success
-                        }
-                    }
-                `,
-                variables: { emails: emailsToShare },
+            await axios.post(`/documents/${documentId}/share`, {
+                users: emailsToShare,
+                redirectURL: `${
+                    import.meta.env.VITE_DOMAIN_URL
+                }/documents/${documentId}`,
             })
         },
         onSuccess: () => {
             enqueueSnackbar("Document shared successfully", {
                 variant: "success",
             })
+
             onClose() // Close modal on success
         },
         onError: (error) => {
             const errorMessage =
                 error.response?.data || "An unknown error occurred"
+
             enqueueSnackbar(`Failed to share document: ${errorMessage}`, {
                 variant: "error",
             })
@@ -127,6 +123,7 @@ function ShareWindow({ isOpen, onClose }) {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+
         shareDocumentMutation.mutate()
     }
 
@@ -159,7 +156,7 @@ function ShareWindow({ isOpen, onClose }) {
                         </Alert>
                     ) : (
                         <List spacing={3} mt={4}>
-                            {emailQuery.data?.data?.usersByEmail?.map(
+                            {emailQuery.data?.data?.findUsersForDocument?.map(
                                 (user, index) => (
                                     <ListItem
                                         key={index}
@@ -167,17 +164,11 @@ function ShareWindow({ isOpen, onClose }) {
                                         px={3}
                                         border="1px solid"
                                         borderRadius="md"
-                                        bg={
-                                            selectedUsers.some(
-                                                (u) => u.email === user.email
-                                            )
-                                                ? "blue.100"
-                                                : "white"
-                                        } // Highlight selected users
                                         onClick={() => handleUserSelect(user)}
                                         cursor="pointer"
                                     >
                                         <Checkbox
+                                            colorScheme="teal"
                                             isChecked={selectedUsers.some(
                                                 (u) => u.email === user.email
                                             )}
@@ -206,12 +197,12 @@ function ShareWindow({ isOpen, onClose }) {
                                     px={3}
                                     border="1px solid"
                                     borderRadius="md"
-                                    bg="green.100"
                                 >
                                     <Text>
                                         {user.name} ({user.email})
                                     </Text>
                                     <Checkbox
+                                        colorScheme="red"
                                         isChecked={user.canWrite}
                                         onChange={() =>
                                             handleCheckboxChange(user.email)
@@ -227,7 +218,18 @@ function ShareWindow({ isOpen, onClose }) {
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+                    <Button
+                        colorScheme="blue"
+                        mr={3}
+                        onClick={handleSubmit}
+                        disabled={
+                            selectedUsers.length === 0 ||
+                            emailQuery.isFetching ||
+                            shareDocumentMutation.isPending
+                        }
+                        isLoading={shareDocumentMutation.isPending}
+                        loadingText="Sharing"
+                    >
                         Share
                     </Button>
                     <Button variant="ghost" onClick={onClose}>

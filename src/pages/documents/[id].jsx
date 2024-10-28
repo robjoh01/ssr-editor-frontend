@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom"
 
 import io from "socket.io-client"
 
-import { Grid, GridItem, Spacer } from "@chakra-ui/react"
+import { Grid, GridItem, Spacer, Skeleton } from "@chakra-ui/react"
 
 import { Loading } from "@/components/core"
 import { TextEditor } from "@/components/actions"
@@ -15,6 +15,8 @@ import {
 } from "@/components/document"
 import { useAuth } from "@/systems/Auth"
 
+import { useErrorBoundary } from "react-error-boundary"
+
 // FIXME: Add ability to share the document
 // FIXME: Add ability to comment on the document
 // FIXME: Add document history
@@ -22,6 +24,7 @@ import { useAuth } from "@/systems/Auth"
 function DocumentPage() {
     const { user } = useAuth()
     const { id: documentId } = useParams()
+    const { showBoundary } = useErrorBoundary()
 
     // Document's state
     const [title, setTitle] = useState("Untitled Document")
@@ -29,6 +32,7 @@ function DocumentPage() {
     const [comments, setComments] = useState([])
     const [users, setUsers] = useState([])
     const [isProcessing, setIsProcessing] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
 
     // Editor's state
     const contentRef = useRef(null)
@@ -48,12 +52,17 @@ function DocumentPage() {
         editor.disable()
         socketRef.current = socket
 
+        socket.once("error", (error) => {
+            showBoundary(new Error(error))
+        })
+
         socket.emit("join_room", documentId, user)
 
         socket.once("load_room", (document, comments) => {
             setTitle(document.title)
             setContent(document.content)
             setComments(comments)
+            setIsLoading(false)
 
             editor.setContents(document.content)
             editor.enable()
@@ -133,21 +142,31 @@ function DocumentPage() {
     }
 
     return (
-        <Grid templateRows="auto 1fr 10%" h="full">
+        <Grid templateRows="auto 1fr 10%" height="full">
             <GridItem>
-                <Header
-                    title={title}
-                    onTitleChange={(e) => setTitle(e.target.value)}
-                    isProcessing={isProcessing}
-                    viewers={users}
-                />
+                <Skeleton isLoaded={!isLoading}>
+                    <Header
+                        documentId={documentId}
+                        title={title}
+                        onTitleChange={(e) => setTitle(e.target.value)}
+                        isProcessing={isProcessing}
+                        viewers={users}
+                    />
+                </Skeleton>
             </GridItem>
-            <GridItem mt={4} display="flex" flexDirection="column">
-                <TextEditor
-                    ref={contentRef}
-                    value={content}
-                    onChange={handleContentChange}
-                />
+            <GridItem mt={4} height="full">
+                <Skeleton
+                    isLoaded={!isLoading}
+                    display="flex"
+                    flexDirection="column"
+                    height="full"
+                >
+                    <TextEditor
+                        ref={contentRef}
+                        value={content}
+                        onChange={handleContentChange}
+                    />
+                </Skeleton>
             </GridItem>
             <GridItem>
                 <Spacer />
