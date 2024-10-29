@@ -118,7 +118,7 @@ function CreateAccount() {
 
     // Mutation for logging in
     const loginMutation = useMutation({
-        mutationFn: () => axios.post("/auth/login", { email, password }),
+        mutationFn: async () => axios.post("/auth/login", { email, password }),
         onSuccess: async () => {
             enqueueSnackbar("Login successful", { variant: "success" })
 
@@ -139,7 +139,7 @@ function CreateAccount() {
 
     // Mutation for creating an account
     const createAccountMutation = useMutation({
-        mutationFn: () =>
+        mutationFn: async () =>
             axios.post("/auth/signUp/complete", {
                 name,
                 email,

@@ -33,12 +33,11 @@ function Login({ setTabIndex }) {
 
     // Mutation for logging in
     const loginMutation = useMutation({
-        mutationFn: () => {
-            return axios.post("/auth/login", {
+        mutationFn: async () =>
+            axios.post("/auth/login", {
                 email,
                 password,
-            })
-        },
+            }),
         onSuccess: async () => {
             enqueueSnackbar("Login successful", { variant: "success" })
 

@@ -87,11 +87,10 @@ function Dashboard() {
     }, [myselfQuery.data, showBoundary])
 
     const newDocumentMutation = useMutation({
-        mutationFn: () => {
-            return axios.post("documents", {
+        mutationFn: async () =>
+            axios.post("documents", {
                 title: "New Document",
-            })
-        },
+            }),
         onSuccess: ({ data }) => {
             enqueueSnackbar("Document created", { variant: "success" })
 
@@ -108,7 +107,7 @@ function Dashboard() {
     })
 
     const deleteDocumentMutation = useMutation({
-        mutationFn: (id) => axios.delete(`documents/${id}/delete`),
+        mutationFn: async (id) => axios.delete(`documents/${id}/delete`),
         onSuccess: () => {
             enqueueSnackbar("Document deleted", { variant: "success" })
 
@@ -256,7 +255,7 @@ function Dashboard() {
                 </GridItem>
 
                 {/* Document Cards */}
-                {myselfQuery.isPending || myselfQuery.isRefetching
+                {myselfQuery.isFetching
                     ? [...Array(5)].map((_, idx) => (
                           <GridItem key={idx}>
                               <Skeleton height="200px" />

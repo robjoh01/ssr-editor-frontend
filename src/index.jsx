@@ -12,6 +12,10 @@ const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             suspense: true,
+            throwOnError: true,
+        },
+        mutations: {
+            throwOnError: true,
         },
     },
 })

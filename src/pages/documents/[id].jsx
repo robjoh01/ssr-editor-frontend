@@ -1,23 +1,21 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useParams } from "react-router-dom"
 
+// Libraries
 import io from "socket.io-client"
-
-import { Grid, GridItem, Spacer, Skeleton } from "@chakra-ui/react"
-
-import { Loading } from "@/components/core"
-import { TextEditor } from "@/components/actions"
-import {
-    Header,
-    Footer,
-    ViewerList,
-    CommentHistory,
-} from "@/components/document"
 import { useAuth } from "@/systems/Auth"
-
 import { useErrorBoundary } from "react-error-boundary"
+import { useSnackbar } from "notistack"
 
-// FIXME: Add ability to share the document
+// API
+import axios from "@/utils/axios.js"
+import { useQuery } from "@tanstack/react-query"
+
+// Components
+import { Grid, GridItem, Spacer, Skeleton, Box } from "@chakra-ui/react"
+import { TextEditor } from "@/components/actions"
+import { Header, Footer, CommentContextMenu } from "@/components/document"
+
 // FIXME: Add ability to comment on the document
 // FIXME: Add document history
 
@@ -25,14 +23,15 @@ function DocumentPage() {
     const { user } = useAuth()
     const { id: documentId } = useParams()
     const { showBoundary } = useErrorBoundary()
+    const { enqueueSnackbar } = useSnackbar
 
     // Document's state
     const [title, setTitle] = useState("Untitled Document")
     const [content, setContent] = useState("")
-    const [comments, setComments] = useState([])
     const [users, setUsers] = useState([])
     const [isProcessing, setIsProcessing] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [textRange, setTextRange] = useState({ index: 0, length: 0 })
 
     // Editor's state
     const contentRef = useRef(null)
@@ -58,10 +57,9 @@ function DocumentPage() {
 
         socket.emit("join_room", documentId, user)
 
-        socket.once("load_room", (document, comments) => {
+        socket.once("load_room", async (document) => {
             setTitle(document.title)
             setContent(document.content)
-            setComments(comments)
             setIsLoading(false)
 
             editor.setContents(document.content)
@@ -141,16 +139,75 @@ function DocumentPage() {
         }, import.meta.env.VITE_SEND_DELAY)
     }
 
+    const handleCommentHighlight = (comment) => {
+        const editor = contentRef.current.getEditor()
+
+        // Extract index and length from the position string
+        const [index, length] = comment.position.split(":").map(Number)
+
+        console.log(index, length)
+
+        // Set selection in the editor
+        editor.setSelection(index, length)
+    }
+
+    const handleSelectionChange = (range) => {
+        if (!range) return
+
+        setTextRange(range)
+    }
+
+    const commentsQuery = useQuery({
+        queryKey: ["comments", documentId],
+        queryFn: async () => {
+            return await axios.post("/graphql", {
+                query: `
+                query($id: ID!) {
+                    document(id: $id) {
+                        comments {
+                            id,
+                            position,
+                            content,
+                            user {
+                                id,
+                                name,
+                                email
+                            },
+                            createdAt,
+                            updatedAt
+                        }
+                    }
+                }
+            `,
+                variables: { id: documentId },
+            })
+        },
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        suspense: false,
+        enabled: false,
+    })
+
     return (
         <Grid templateRows="auto 1fr 10%" height="full">
             <GridItem>
                 <Skeleton isLoaded={!isLoading}>
                     <Header
-                        documentId={documentId}
                         title={title}
                         onTitleChange={(e) => setTitle(e.target.value)}
                         isProcessing={isProcessing}
+                        documentId={documentId}
                         viewers={users}
+                        comments={
+                            commentsQuery.data?.data?.data?.document
+                                ?.comments || []
+                        }
+                        onCommentHighlight={handleCommentHighlight}
+                        onCommentsRefresh={async () =>
+                            await commentsQuery.refetch()
+                        }
+                        onCommentsLoading={commentsQuery.isFetching}
                     />
                 </Skeleton>
             </GridItem>
@@ -165,11 +222,17 @@ function DocumentPage() {
                         ref={contentRef}
                         value={content}
                         onChange={handleContentChange}
+                        onChangeSelection={handleSelectionChange}
                     />
                 </Skeleton>
             </GridItem>
-            <GridItem>
-                <Spacer />
+            <GridItem position="relative">
+                {textRange.length > 0 && (
+                    <CommentContextMenu
+                        documentId={documentId}
+                        textRange={textRange}
+                    />
+                )}
             </GridItem>
         </Grid>
     )

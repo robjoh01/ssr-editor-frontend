@@ -46,7 +46,7 @@ function Profile() {
     })
 
     const updateUserMutation = useMutation({
-        mutationFn: (data) => axios.put("/auth/myself", data),
+        mutationFn: async (data) => axios.put("/auth/myself", data),
         onSuccess: () => {
             enqueueSnackbar("User updated", { variant: "success" })
 
@@ -64,7 +64,7 @@ function Profile() {
     })
 
     const deleteUserMutation = useMutation({
-        mutationFn: () => axios.delete("/auth/myself"),
+        mutationFn: async () => axios.delete("/auth/myself"),
         onSuccess: async () => {
             enqueueSnackbar("User deleted", { variant: "success" })
 

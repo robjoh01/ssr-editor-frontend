@@ -45,7 +45,7 @@ function SignUp({ setTabIndex }) {
 
     // Mutation for creating a user
     const createUserMutation = useMutation({
-        mutationFn: () =>
+        mutationFn: async () =>
             axios.post("/auth/signUp", {
                 email,
                 redirect: `${import.meta.env.VITE_DOMAIN_URL}/account/verify`,
