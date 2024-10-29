@@ -67,7 +67,7 @@ function ResetAccount() {
 
     // Mutation for resetting the password
     const resetPasswordMutation = useMutation({
-        mutationFn: () =>
+        mutationFn: async () =>
             axios.put("/auth/myself", {
                 password,
             }),

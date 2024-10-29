@@ -1,6 +1,6 @@
 import React from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { useAuth } from "@/auth/index"
+import { useAuth } from "@/systems/Auth"
 
 import {
     useColorMode,

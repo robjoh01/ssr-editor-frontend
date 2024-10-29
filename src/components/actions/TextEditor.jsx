@@ -1,16 +1,23 @@
 import React, { forwardRef } from "react"
-import ReactQuill from "react-quill"
-import "react-quill/dist/quill.snow.css"
+import ReactQuill from "react-quill-new"
+import "react-quill-new/dist/quill.snow.css"
 
 const { Quill } = ReactQuill
 
 import QuillCursors from "quill-cursors"
 Quill.register("modules/cursors", QuillCursors)
 
-import "quill-comment/quill.comment.js"
-import "quill-comment/quill.comment.css"
+/**
+ * @typedef {import("react-quill").Quill} Quill
+ * @typedef {import("react-quill").EditorProps} EditorProps
+ * @typedef {import("react-quill").Format} Format
+ */
 
 const modules = {
+    /**
+     * Custom toolbar configuration
+     * @type {import("react-quill").Format[]}
+     */
     toolbar: [
         [{ font: [] }],
         [{ header: [1, 2, false] }],
@@ -26,16 +33,28 @@ const modules = {
             { indent: "+1" },
         ],
         ["link", "image", "video", "formula"],
-        ["comments-add"],
-        ["comments-toggle"],
     ],
+
+    /**
+     * Custom history configuration
+     * @type {import("react-quill").HistoryConfig}
+     */
     history: {
         delay: 2500,
         userOnly: true,
     },
+
+    /**
+     * Enable real-time collaboration cursors
+     * @type {boolean}
+     */
     cursors: true,
 }
 
+/**
+ * List of formats to support in the editor
+ * @type {Format[]}
+ */
 const formats = [
     "header",
     "font",
@@ -46,7 +65,6 @@ const formats = [
     "strike",
     "blockquote",
     "list",
-    "bullet",
     "indent",
     "link",
     "image",
@@ -56,21 +74,14 @@ const formats = [
     "background",
     "align",
     "code-block",
-    "comments-add",
-    "comments-toggle",
 ]
 
-function commentServerTimestamp() {
-    // call from server or local time. But must return promise with UNIX Epoch timestamp resolved (like 1507617041)
-    return new Promise((resolve) => {
-        const currentTimestamp = Math.round(new Date().getTime() / 1000)
-
-        resolve(currentTimestamp)
-    })
-}
-
+/**
+ * Custom text editor component
+ * @extends {React.ForwardRefExoticComponent<EditorProps & React.RefAttributes<Quill>>}
+ */
 const TextEditor = forwardRef(function TextEditor(
-    { value, onChange, userId, userName, onAddComment, onClickedComments },
+    { value, onChange, onChangeSelection },
     ref
 ) {
     return (
@@ -79,18 +90,8 @@ const TextEditor = forwardRef(function TextEditor(
             theme="snow"
             value={value}
             onChange={onChange}
-            modules={{
-                ...modules,
-                comment: {
-                    enabled: true,
-                    commentAuthorId: userId,
-                    commentAddOn: userName,
-                    color: "yellow",
-                    commentAddClick: onAddComment,
-                    commentsClick: onClickedComments,
-                    commentTimestamp: commentServerTimestamp,
-                },
-            }}
+            onChangeSelection={onChangeSelection}
+            modules={modules}
             formats={formats}
         />
     )

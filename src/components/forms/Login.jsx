@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import { useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
-import { useAuth } from "@/auth/index"
+import { useAuth } from "@/systems/Auth"
 import { authWithGithub, authWithGoogle } from "@/utils/api/auth"
 
 import {
@@ -33,12 +33,11 @@ function Login({ setTabIndex }) {
 
     // Mutation for logging in
     const loginMutation = useMutation({
-        mutationFn: () => {
-            return axios.post("/auth/login", {
+        mutationFn: async () =>
+            axios.post("/auth/login", {
                 email,
                 password,
-            })
-        },
+            }),
         onSuccess: async () => {
             enqueueSnackbar("Login successful", { variant: "success" })
 

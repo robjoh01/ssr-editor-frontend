@@ -12,13 +12,17 @@ const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             suspense: true,
+            throwOnError: true,
+        },
+        mutations: {
+            throwOnError: true,
         },
     },
 })
 import { SnackbarProvider } from "notistack"
 
 import { BrowserRouter } from "react-router-dom"
-import { AuthProvider } from "@/auth/index"
+import { AuthProvider } from "@/systems/Auth"
 
 const Main = () => {
     return (

@@ -26,8 +26,8 @@ function CodePage() {
     const [hasOutputError, setHasOutputError] = useState(false)
 
     const runCodeMutation = useMutation({
-        mutationFn: () => {
-            return axios.post(
+        mutationFn: async () =>
+            axios.post(
                 "https://execjs.emilfolino.se/code",
                 {
                     code: btoa(editorRef.current.getValue()),
@@ -35,8 +35,7 @@ function CodePage() {
                 {
                     withCredentials: false,
                 }
-            )
-        },
+            ),
         onSuccess: ({ data: output }) => {
             const decodedOutput = atob(output.data)
             setOutput(decodedOutput ? decodedOutput.split("\n") : [])

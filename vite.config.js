@@ -18,7 +18,7 @@ export default defineConfig({
         alias: {
             "@": "/src",
             "@components": "/src/components",
-            "@auth": "/src/auth",
+            "@systems": "/src/systems",
             "@hooks": "/src/hooks",
             "@contexts": "/src/contexts",
             "@pages": "/src/pages",

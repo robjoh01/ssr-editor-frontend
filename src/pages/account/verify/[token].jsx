@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom"
 
 import { useQuery, useMutation } from "@tanstack/react-query"
 import axios from "@/utils/axios.js"
+import { useAuth } from "@/systems/Auth"
+
 import validator from "validator"
 
 import {
@@ -26,6 +28,7 @@ import { Loading } from "@/components/core"
 function CreateAccount() {
     const navigate = useNavigate()
     const { token } = useParams()
+    const { fetchUser } = useAuth()
 
     const [isVerify, setIsVerify] = useState(false)
     const [countdown, setCountdown] = useState(0)
@@ -74,7 +77,7 @@ function CreateAccount() {
             verifyQuery.error?.response?.data || "An unknown error occurred"
 
         showBoundary(new Error(errorMessage))
-    }, [verifyQuery.error])
+    }, [verifyQuery.error, showBoundary])
 
     useEffect(() => {
         if (name === "") {
@@ -115,9 +118,11 @@ function CreateAccount() {
 
     // Mutation for logging in
     const loginMutation = useMutation({
-        mutationFn: () => axios.post("/auth/login", { email, password }),
-        onSuccess: () => {
+        mutationFn: async () => axios.post("/auth/login", { email, password }),
+        onSuccess: async () => {
             enqueueSnackbar("Login successful", { variant: "success" })
+
+            await fetchUser()
 
             // Redirect to dashboard after successful login
             navigate("/dashboard", { replace: true })
@@ -134,7 +139,7 @@ function CreateAccount() {
 
     // Mutation for creating an account
     const createAccountMutation = useMutation({
-        mutationFn: () =>
+        mutationFn: async () =>
             axios.post("/auth/signUp/complete", {
                 name,
                 email,

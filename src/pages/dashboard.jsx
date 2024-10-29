@@ -10,6 +10,7 @@ import {
     Select,
     Grid,
     GridItem,
+    Heading,
     Text,
     Button,
     VStack,
@@ -20,25 +21,28 @@ import {
     CardHeader,
     CardBody,
     CardFooter,
+    Link as ChakraLink,
 } from "@chakra-ui/react"
+
 import { BiPlus, BiTrash } from "react-icons/bi"
+
 import PortraitCard from "@/components/visuals/PortraitCard.jsx"
-import TextTruncate from "react-text-truncate"
 
 import { useSnackbar } from "notistack"
 import { useErrorBoundary } from "react-error-boundary"
 import ResponseError from "@/utils/responseError.js"
+import { usePrompt } from "@/systems/Prompt.jsx"
 
 function Dashboard() {
     const navigate = useNavigate()
 
     const { enqueueSnackbar } = useSnackbar()
     const { showBoundary } = useErrorBoundary()
+    const { showPrompt } = usePrompt()
 
     const [activeFilters, setActiveFilters] = useState(["owned", "shared"])
     const [sortOption, setSortOption] = useState("lastUpdated")
     const [documents, setDocuments] = useState([])
-    const [skeletonCount] = useState(5)
 
     const myselfQuery = useQuery({
         queryKey: ["myself"],
@@ -83,11 +87,10 @@ function Dashboard() {
     }, [myselfQuery.data, showBoundary])
 
     const newDocumentMutation = useMutation({
-        mutationFn: () => {
-            return axios.post("documents", {
+        mutationFn: async () =>
+            axios.post("documents", {
                 title: "New Document",
-            })
-        },
+            }),
         onSuccess: ({ data }) => {
             enqueueSnackbar("Document created", { variant: "success" })
 
@@ -104,7 +107,7 @@ function Dashboard() {
     })
 
     const deleteDocumentMutation = useMutation({
-        mutationFn: (id) => axios.delete(`documents/${id}/delete`),
+        mutationFn: async (id) => axios.delete(`documents/${id}/delete`),
         onSuccess: () => {
             enqueueSnackbar("Document deleted", { variant: "success" })
 
@@ -131,6 +134,20 @@ function Dashboard() {
 
     const handleSortChange = (e) => {
         setSortOption(e.target.value)
+    }
+
+    const handleDeleteDocument = (id) => {
+        showPrompt({
+            title: "Delete Document",
+            message:
+                "Are you sure you want to delete this document? This action cannot be undone.",
+            confirmText: `Delete ${id}`,
+            cancelText: "Cancel",
+            onConfirm: () => {
+                deleteDocumentMutation.mutate(id)
+            },
+            loadingText: "Deleting",
+        })
     }
 
     useEffect(() => {
@@ -207,16 +224,22 @@ function Dashboard() {
             </Box>
 
             <Grid
-                templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
+                templateColumns={{
+                    base: "1fr",
+                    sm: "repeat(2, 1fr)",
+                    lg: "repeat(3, 1fr)",
+                }}
                 gap={6}
             >
+                {/* Create Document Card */}
                 <GridItem>
-                    <PortraitCard>
+                    <PortraitCard _hover={{ bg: "gray.100" }}>
                         <Button
                             variant="outline"
                             minWidth="full"
                             minHeight="full"
                             onClick={() => newDocumentMutation.mutate()}
+                            _hover={{ bg: "gray.100" }}
                         >
                             <HStack
                                 spacing={2}
@@ -230,102 +253,98 @@ function Dashboard() {
                         </Button>
                     </PortraitCard>
                 </GridItem>
-                {myselfQuery.isPending
-                    ? // Render skeletons while loading
-                      [...Array(skeletonCount)].map((_, idx) => (
+
+                {/* Document Cards */}
+                {myselfQuery.isFetching
+                    ? [...Array(5)].map((_, idx) => (
                           <GridItem key={idx}>
                               <Skeleton height="200px" />
                           </GridItem>
                       ))
-                    : // Render the actual documents once the data is loaded
-                      documents?.map((doc) => (
+                    : documents?.map((doc) => (
                           <GridItem key={doc.id}>
-                              <Link to={`/documents/${doc.id}`}>
-                                  <PortraitCard>
-                                      <CardHeader
-                                          display="flex"
-                                          flexDirection="row"
-                                          justifyContent="space-between"
-                                          alignItems="center"
-                                          pb={2}
+                              <PortraitCard
+                                  _hover={{ bg: "gray.100" }}
+                                  position="relative"
+                              >
+                                  <CardHeader
+                                      display="flex"
+                                      flexDirection="row"
+                                      justifyContent="space-between"
+                                      alignItems="center"
+                                      pb={2}
+                                  >
+                                      <ChakraLink
+                                          as={Link}
+                                          to={`/documents/${doc.id}`}
                                       >
-                                          <TextTruncate
-                                              line={1}
-                                              element="span"
-                                              truncateText="…"
-                                              text={doc.title}
-                                          />
-                                          <IconButton
-                                              icon={<BiTrash />}
-                                              variant="ghost"
+                                          <Heading
+                                              as="h3"
                                               size="sm"
-                                              aria-label="Delete document"
-                                              onClick={() =>
-                                                  deleteDocumentMutation.mutate(
-                                                      doc.id
-                                                  )
-                                              }
-                                              color="red.500"
-                                          />
-                                      </CardHeader>
-
-                                      <CardBody>
-                                          <VStack
-                                              align="flex-start"
-                                              spacing={2}
+                                              noOfLines={1}
                                           >
-                                              <Text
-                                                  fontSize="sm"
-                                                  color="gray.600"
-                                              >
-                                                  <Text
-                                                      as="span"
-                                                      fontWeight="semibold"
-                                                  >
-                                                      Author:
-                                                  </Text>{" "}
-                                                  {doc.owner.name}
-                                              </Text>
-                                              <Text
-                                                  fontSize="sm"
-                                                  color="gray.600"
-                                              >
-                                                  <Text
-                                                      as="span"
-                                                      fontWeight="semibold"
-                                                  >
-                                                      Created:
-                                                  </Text>{" "}
-                                                  {new Date(
-                                                      doc.createdAt
-                                                  ).toLocaleString()}
-                                              </Text>
-                                              <Text
-                                                  fontSize="sm"
-                                                  color="gray.600"
-                                              >
-                                                  <Text
-                                                      as="span"
-                                                      fontWeight="semibold"
-                                                  >
-                                                      Last Updated:
-                                                  </Text>{" "}
-                                                  {new Date(
-                                                      doc.updatedAt
-                                                  ).toLocaleString()}
-                                              </Text>
-                                          </VStack>
-                                      </CardBody>
+                                              {doc.title}
+                                          </Heading>
+                                      </ChakraLink>
 
-                                      <Divider />
+                                      <IconButton
+                                          icon={<BiTrash />}
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Delete document"
+                                          onClick={(e) => {
+                                              e.stopPropagation() // Prevents triggering the Link click event
 
-                                      <CardFooter textAlign="left">
-                                          <Text fontSize="xs" color="gray.500">
-                                              Document ID: {doc.id}
+                                              handleDeleteDocument(doc.id)
+                                          }}
+                                          color="red.500"
+                                      />
+                                  </CardHeader>
+
+                                  <CardBody>
+                                      <VStack align="flex-start" spacing={2}>
+                                          <Text fontSize="sm" color="gray.600">
+                                              <Text
+                                                  as="span"
+                                                  fontWeight="semibold"
+                                              >
+                                                  Author:
+                                              </Text>{" "}
+                                              {doc.owner.name}
                                           </Text>
-                                      </CardFooter>
-                                  </PortraitCard>
-                              </Link>
+                                          <Text fontSize="sm" color="gray.600">
+                                              <Text
+                                                  as="span"
+                                                  fontWeight="semibold"
+                                              >
+                                                  Created:
+                                              </Text>{" "}
+                                              {new Date(
+                                                  doc.createdAt
+                                              ).toLocaleString()}
+                                          </Text>
+                                          <Text fontSize="sm" color="gray.600">
+                                              <Text
+                                                  as="span"
+                                                  fontWeight="semibold"
+                                              >
+                                                  Last Updated:
+                                              </Text>{" "}
+                                              {new Date(
+                                                  doc.updatedAt
+                                              ).toLocaleString()}
+                                          </Text>
+                                      </VStack>
+                                  </CardBody>
+
+                                  <Divider />
+
+                                  <CardFooter textAlign="left">
+                                      <Text fontSize="xs" color="gray.500">
+                                          Document ID: {doc.id}
+                                      </Text>
+                                  </CardFooter>
+                              </PortraitCard>
                           </GridItem>
                       ))}
             </Grid>

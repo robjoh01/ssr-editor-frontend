@@ -1,166 +1,238 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useParams } from "react-router-dom"
 
+// Libraries
 import io from "socket.io-client"
-import { useAuth } from "@/auth/index"
+import { useAuth } from "@/systems/Auth"
+import { useErrorBoundary } from "react-error-boundary"
+import { useSnackbar } from "notistack"
 
-import { Grid, GridItem, Spacer } from "@chakra-ui/react"
+// API
+import axios from "@/utils/axios.js"
+import { useQuery } from "@tanstack/react-query"
 
-import { Loading } from "@/components/core"
+// Components
+import { Grid, GridItem, Spacer, Skeleton, Box } from "@chakra-ui/react"
 import { TextEditor } from "@/components/actions"
-import { DocumentHeader } from "@/components/document"
+import { Header, Footer, CommentContextMenu } from "@/components/document"
 
 // FIXME: Add ability to comment on the document
-
-// TODO: Add table of contents
-// TODO: Fix viewer list
-
-function onAddComment(callback) {
-    // get called when `ADD COMMENT` btn on options bar is clicked
-    console.log("commentAddClick")
-
-    // UX works to get comment from user, like showing modal dialog
-    // $('#inputCommentModal').modal('show');
-    // But after whatever UX works, call the `callback` with comment to pass back comment
-
-    const comment = "test comment"
-    callback(comment)
-}
-
-function onClickedComments() {
-    // comments btn callback
-    // get called when you click `COMMENTS` btn on options bar for you to do additional things beside color on/off. Color on/off is already done before the callback is called.
-}
+// FIXME: Add document history
 
 function DocumentPage() {
     const { user } = useAuth()
-    const { id } = useParams()
+    const { id: documentId } = useParams()
+    const { showBoundary } = useErrorBoundary()
+    const { enqueueSnackbar } = useSnackbar
 
-    const [isPending, setIsPending] = useState(false)
+    // Document's state
     const [title, setTitle] = useState("Untitled Document")
     const [content, setContent] = useState("")
-
-    const inputRef = useRef(null)
-    const socketRef = useRef(null)
-
-    const isProcessingRef = useRef(false)
+    const [users, setUsers] = useState([])
     const [isProcessing, setIsProcessing] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [textRange, setTextRange] = useState({ index: 0, length: 0 })
 
-    const saveTimeoutRef = useRef(null)
-    const lastContentRef = useRef(null)
-    const processTimeout = useRef(null)
+    // Editor's state
+    const contentRef = useRef(null)
+    const socketRef = useRef(null)
+    const sendTimeoutRef = useRef(null)
 
     useEffect(() => {
+        if (!user) return
+
         const socket = io(import.meta.env.VITE_BACKEND_URL, {
             withCredentials: true,
             transports: ["websocket"],
         })
-        const editor = inputRef.current.getEditor()
 
-        inputRef.current?.focus()
-
+        const editor = contentRef.current.getEditor()
+        editor.setText("")
         editor.disable()
-        editor.setText("Fetching...")
         socketRef.current = socket
-        setIsPending(true)
 
-        socket.emit("join-room", id)
+        socket.once("error", (error) => {
+            showBoundary(new Error(error))
+        })
 
-        socket.once("load-room", (document) => {
+        socket.emit("join_room", documentId, user)
+
+        socket.once("load_room", async (document) => {
+            setTitle(document.title)
+            setContent(document.content)
+            setIsLoading(false)
+
             editor.setContents(document.content)
             editor.enable()
 
-            setTitle(document.title)
-            setContent(document.content)
-            lastContentRef.current = document.content
-
-            setIsPending(false)
+            contentRef.current?.focus()
         })
 
-        socket.on("cursor-update", ({ range, userId }) => {
-            const cursors = editor.getModule("cursors")
-
-            if (cursors) {
-                cursors.createCursor(userId, "User " + userId, "blue")
-                cursors.moveCursor(userId, range)
-            }
+        socket.on("users_changed", (userList) => {
+            setUsers(userList)
         })
 
-        socket.on("receive-changes", (delta, receivedId) => {
-            if (inputRef.current == null || id !== receivedId) return
-            editor.updateContents(delta)
-            setProcessingState(true) // Use ref to avoid re-rendering
+        socket.on("save_pending", () => {
+            editor.disable()
+            setIsProcessing(true)
+        })
+
+        socket.on("save_success", (content) => {
+            setContent(content)
+            setIsProcessing(false)
+
+            editor.setContents(content)
+            editor.enable()
+
+            contentRef.current?.focus()
+        })
+
+        socket.on("receive_changes", (content) => {
+            setContent(content)
+            editor.setContents(content)
         })
 
         editor.on("selection-change", (range) => {
-            if (range) {
-                socket.emit("cursor-update", { range, userId: socket.id })
-            }
+            if (!range) return
+
+            socket.emit("cursor_pending", {
+                range,
+                userId: socket.id,
+                userName: user.name,
+            })
         })
 
+        socket.on(
+            "cursor_changed",
+            ({ range, userId, userName, colorDetails }) => {
+                const cursors = editor.getModule("cursors")
+
+                if (!cursors) return
+
+                // Create a cursor for the user, if it doesn't exist.
+                cursors.createCursor(userId, userName, colorDetails.color)
+
+                // Move the cursor to the new range
+                cursors.moveCursor(userId, range)
+            }
+        )
+
         return () => {
-            socket.emit("leave-room", id)
-            socket.off("cursor-update")
-            socket.off("receive-changes")
             socket.disconnect()
         }
-    }, [id])
-
-    // Update processing status using ref
-    const setProcessingState = (state) => {
-        isProcessingRef.current = state
-        // Set state for UI updates
-        setIsProcessing(state)
-    }
+    }, [documentId, user])
 
     const handleContentChange = (value, delta, source) => {
         if (socketRef.current == null || source !== "user") return
 
-        socketRef.current.emit("send-changes", delta)
+        clearTimeout(sendTimeoutRef.current)
 
-        clearTimeout(saveTimeoutRef.current)
+        sendTimeoutRef.current = setTimeout(() => {
+            const editor = contentRef.current.getEditor()
+            const content = editor.getContents()
 
-        saveTimeoutRef.current = setTimeout(() => {
-            if (value !== lastContentRef.current) {
-                const editor = inputRef.current.getEditor()
-                socketRef.current.emit("save-changes", editor.getContents())
-                lastContentRef.current = editor.getContents()
-                setProcessingState(true)
-            }
-        }, import.meta.env.VITE_SAVE_DELAY)
+            socketRef.current.emit("send_changes", {
+                title,
+                content,
+            })
+            setContent(content)
+        }, import.meta.env.VITE_SEND_DELAY)
     }
 
-    useEffect(() => {
-        clearTimeout(processTimeout.current)
+    const handleCommentHighlight = (comment) => {
+        const editor = contentRef.current.getEditor()
 
-        // Hide spinner after 1.5 seconds
-        if (isProcessingRef.current) {
-            processTimeout.current = setTimeout(() => {
-                setProcessingState(false)
-            }, 1500)
-        }
-    }, [isProcessing])
+        // Extract index and length from the position string
+        const [index, length] = comment.position.split(":").map(Number)
 
-    if (isPending) {
-        return <Loading />
+        console.log(index, length)
+
+        // Set selection in the editor
+        editor.setSelection(index, length)
     }
+
+    const handleSelectionChange = (range) => {
+        if (!range) return
+
+        setTextRange(range)
+    }
+
+    const commentsQuery = useQuery({
+        queryKey: ["comments", documentId],
+        queryFn: async () => {
+            return await axios.post("/graphql", {
+                query: `
+                query($id: ID!) {
+                    document(id: $id) {
+                        comments {
+                            id,
+                            position,
+                            content,
+                            user {
+                                id,
+                                name,
+                                email
+                            },
+                            createdAt,
+                            updatedAt
+                        }
+                    }
+                }
+            `,
+                variables: { id: documentId },
+            })
+        },
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        suspense: false,
+        enabled: false,
+    })
 
     return (
-        <Grid templateRows="auto 1fr 10%" h="full">
+        <Grid templateRows="auto 1fr 10%" height="full">
             <GridItem>
-                <DocumentHeader title={title} isProcessing={isProcessing} />
+                <Skeleton isLoaded={!isLoading}>
+                    <Header
+                        title={title}
+                        onTitleChange={(e) => setTitle(e.target.value)}
+                        isProcessing={isProcessing}
+                        documentId={documentId}
+                        viewers={users}
+                        comments={
+                            commentsQuery.data?.data?.data?.document
+                                ?.comments || []
+                        }
+                        onCommentHighlight={handleCommentHighlight}
+                        onCommentsRefresh={async () =>
+                            await commentsQuery.refetch()
+                        }
+                        onCommentsLoading={commentsQuery.isFetching}
+                    />
+                </Skeleton>
             </GridItem>
-            <GridItem mt={4} display="flex" flexDirection="column">
-                <TextEditor
-                    ref={inputRef}
-                    value={content}
-                    onChange={handleContentChange}
-                    userId={123}
-                    userName={"User 123"}
-                />
+            <GridItem mt={4} height="full">
+                <Skeleton
+                    isLoaded={!isLoading}
+                    display="flex"
+                    flexDirection="column"
+                    height="full"
+                >
+                    <TextEditor
+                        ref={contentRef}
+                        value={content}
+                        onChange={handleContentChange}
+                        onChangeSelection={handleSelectionChange}
+                    />
+                </Skeleton>
             </GridItem>
-            <GridItem>
-                <Spacer />
+            <GridItem position="relative">
+                {textRange.length > 0 && (
+                    <CommentContextMenu
+                        documentId={documentId}
+                        textRange={textRange}
+                    />
+                )}
             </GridItem>
         </Grid>
     )

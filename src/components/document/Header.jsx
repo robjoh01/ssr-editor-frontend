@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 
+// Components
 import {
     useDisclosure,
     HStack,
@@ -11,24 +12,47 @@ import {
     MenuItem,
 } from "@chakra-ui/react"
 
-import { FaShareAlt } from "react-icons/fa" // FaFileAlt
-import { ChevronDownIcon } from "@chakra-ui/icons"
+import { ViewerList, ShareWindow, CommentHistory } from "@/components/document"
+import { SyncLoader } from "react-spinners"
+import { useHotkeys } from "react-hotkeys-hook"
 
-import {
-    ViewerList,
-    DocumentSpinner,
-    DocumentShare,
-} from "@/components/document"
+// Icons
+import { BiSolidShareAlt, BiChevronDown, BiConversation } from "react-icons/bi"
 
-function Header({ title, setTitle, viewers, isProcessing }) {
+function Header({
+    title,
+    onTitleChange,
+    isProcessing,
+    documentId,
+    viewers,
+    comments,
+    onCommentHighlight,
+    onCommentsRefresh,
+    onCommentsLoading,
+}) {
     const shareModal = useDisclosure()
+    const commentModal = useDisclosure()
+
+    useHotkeys("ctrl+m", () => {
+        if (commentModal.isOpen) {
+            commentModal.onClose()
+        } else {
+            commentModal.onOpen()
+        }
+    })
+
+    useEffect(() => {
+        if (!commentModal.isOpen) return
+
+        onCommentsRefresh()
+    }, [commentModal.isOpen])
 
     return (
         <>
             <HStack justifyContent="space-between" width="full">
                 <HStack spacing={2} width="full">
                     <Menu>
-                        <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton as={Button} rightIcon={<BiChevronDown />}>
                             File
                         </MenuButton>
                         <MenuList>
@@ -39,7 +63,7 @@ function Header({ title, setTitle, viewers, isProcessing }) {
                     </Menu>
 
                     <Menu>
-                        <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton as={Button} rightIcon={<BiChevronDown />}>
                             Edit
                         </MenuButton>
                         <MenuList>
@@ -53,18 +77,27 @@ function Header({ title, setTitle, viewers, isProcessing }) {
 
                     <Input
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={onTitleChange}
                         fontWeight="bold"
                         size="md"
                         maxW="xl"
                     />
 
-                    <DocumentSpinner isProcessing={isProcessing} />
+                    {isProcessing && <SyncLoader color="#36d7b7" />}
                 </HStack>
-                <HStack>
+                <HStack gap={4}>
                     <ViewerList viewers={viewers} />
+
                     <Button
-                        leftIcon={<FaShareAlt />}
+                        leftIcon={<BiConversation />}
+                        colorScheme="orange"
+                        onClick={() => commentModal.onOpen()}
+                    >
+                        History
+                    </Button>
+
+                    <Button
+                        leftIcon={<BiSolidShareAlt />}
                         colorScheme="blue"
                         onClick={shareModal.onOpen}
                     >
@@ -74,9 +107,20 @@ function Header({ title, setTitle, viewers, isProcessing }) {
             </HStack>
 
             {/* Share Modal */}
-            <DocumentShare
+            <ShareWindow
+                documentId={documentId}
                 isOpen={shareModal.isOpen}
                 onClose={shareModal.onClose}
+            />
+
+            {/* Comment Modal */}
+            <CommentHistory
+                documentId={documentId}
+                isOpen={commentModal.isOpen}
+                onClose={commentModal.onClose}
+                isLoading={onCommentsLoading}
+                onHighlight={onCommentHighlight}
+                comments={comments}
             />
         </>
     )
