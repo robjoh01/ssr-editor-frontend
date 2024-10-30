@@ -5,25 +5,20 @@ import { useParams } from "react-router-dom"
 import io from "socket.io-client"
 import { useAuth } from "@/systems/Auth"
 import { useErrorBoundary } from "react-error-boundary"
-import { useSnackbar } from "notistack"
 
 // API
 import axios from "@/utils/axios.js"
 import { useQuery } from "@tanstack/react-query"
 
 // Components
-import { Grid, GridItem, Spacer, Skeleton, Box } from "@chakra-ui/react"
+import { Grid, GridItem, Skeleton } from "@chakra-ui/react"
 import { TextEditor } from "@/components/actions"
-import { Header, Footer, CommentContextMenu } from "@/components/document"
-
-// FIXME: Add ability to comment on the document
-// FIXME: Add document history
+import { Header, CommentContextMenu } from "@/components/document"
 
 function DocumentPage() {
     const { user } = useAuth()
     const { id: documentId } = useParams()
     const { showBoundary } = useErrorBoundary()
-    const { enqueueSnackbar } = useSnackbar
 
     // Document's state
     const [title, setTitle] = useState("Untitled Document")
@@ -208,6 +203,7 @@ function DocumentPage() {
                             await commentsQuery.refetch()
                         }
                         onCommentsLoading={commentsQuery.isFetching}
+                        socketRef={socketRef}
                     />
                 </Skeleton>
             </GridItem>

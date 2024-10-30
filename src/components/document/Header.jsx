@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react"
 
+import { useAuth } from "@/systems/Auth"
+
 // Components
 import {
     useDisclosure,
+    Badge,
     HStack,
     Button,
     Input,
@@ -10,14 +13,25 @@ import {
     MenuButton,
     MenuList,
     MenuItem,
+    Tooltip,
 } from "@chakra-ui/react"
 
-import { ViewerList, ShareWindow, CommentHistory } from "@/components/document"
+import {
+    ViewerList,
+    ShareWindow,
+    CommentHistory,
+    ChatWindow,
+} from "@/components/document"
 import { SyncLoader } from "react-spinners"
 import { useHotkeys } from "react-hotkeys-hook"
 
 // Icons
-import { BiSolidShareAlt, BiChevronDown, BiConversation } from "react-icons/bi"
+import {
+    BiSolidShareAlt,
+    BiChevronDown,
+    BiConversation,
+    BiChat,
+} from "react-icons/bi"
 
 function Header({
     title,
@@ -29,15 +43,29 @@ function Header({
     onCommentHighlight,
     onCommentsRefresh,
     onCommentsLoading,
+    socketRef,
 }) {
+    const { user } = useAuth()
+
+    const [unreadCount, setUnreadCount] = useState(0)
+
     const shareModal = useDisclosure()
     const commentModal = useDisclosure()
+    const chatModal = useDisclosure()
 
     useHotkeys("ctrl+m", () => {
         if (commentModal.isOpen) {
             commentModal.onClose()
         } else {
             commentModal.onOpen()
+        }
+    })
+
+    useHotkeys("ctrl+n", () => {
+        if (chatModal.isOpen) {
+            chatModal.onClose()
+        } else {
+            chatModal.onOpen()
         }
     })
 
@@ -88,13 +116,40 @@ function Header({
                 <HStack gap={4}>
                     <ViewerList viewers={viewers} />
 
-                    <Button
-                        leftIcon={<BiConversation />}
-                        colorScheme="orange"
-                        onClick={() => commentModal.onOpen()}
-                    >
-                        History
-                    </Button>
+                    <Tooltip label="Live Chat (CTRL + N)">
+                        <Button
+                            leftIcon={<BiChat />}
+                            colorScheme="blue"
+                            onClick={() => chatModal.onOpen()}
+                        >
+                            Live
+                            {unreadCount > 0 && (
+                                <Badge
+                                    color="black"
+                                    bg="red.300"
+                                    _dark={{ color: "white", bg: "red.500" }}
+                                    position="absolute"
+                                    top={0}
+                                    right={0}
+                                    transform="translate(25%, -25%)"
+                                    borderRadius="full"
+                                    px={2}
+                                >
+                                    {unreadCount}
+                                </Badge>
+                            )}
+                        </Button>
+                    </Tooltip>
+
+                    <Tooltip label="Comment History (CTRL + M)">
+                        <Button
+                            leftIcon={<BiConversation />}
+                            colorScheme="orange"
+                            onClick={() => commentModal.onOpen()}
+                        >
+                            History
+                        </Button>
+                    </Tooltip>
 
                     <Button
                         leftIcon={<BiSolidShareAlt />}
@@ -121,6 +176,16 @@ function Header({
                 isLoading={onCommentsLoading}
                 onHighlight={onCommentHighlight}
                 comments={comments}
+            />
+
+            {/* Chat Modal */}
+            <ChatWindow
+                socketRef={socketRef}
+                user={user}
+                documentId={documentId}
+                isOpen={chatModal.isOpen}
+                onClose={chatModal.onClose}
+                setUnreadCount={setUnreadCount}
             />
         </>
     )

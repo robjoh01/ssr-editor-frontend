@@ -6,6 +6,7 @@ import Footer from "./Footer"
 import ShareWindow from "./ShareWindow"
 import CommentHistory from "./CommentHistory"
 import CommentContextMenu from "./CommentContextMenu"
+import ChatWindow from "./ChatWindow"
 // import Toc from "./Toc"
 
 // Misc
@@ -17,5 +18,6 @@ export {
     ShareWindow,
     CommentHistory,
     CommentContextMenu,
+    ChatWindow,
     ViewerList,
 }
