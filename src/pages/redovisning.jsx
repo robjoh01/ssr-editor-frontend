@@ -48,8 +48,8 @@ function Redovisning() {
         <Grid templateColumns="auto 1fr">
             <GridItem position="sticky" top={0} alignSelf="start">
                 <OrderedList spacing={3} py={16}>
-                    {links.map((link) => (
-                        <ListItem>
+                    {links.map((link, index) => (
+                        <ListItem key={index}>
                             <Link
                                 href={link.href}
                                 color="blue.500"
