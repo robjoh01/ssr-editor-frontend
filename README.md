@@ -39,15 +39,24 @@ SSR-Editor is a real-time web application for creating and editing documents col
 
 - **.env**:
      ```bash
+     # BTH Config
      DEPLOY_USER=<your_acronym> # BTH's user acronym for deploying at BTH's server
-     VITE_SAVE_DELAY=750 # Save delay in milliseconds
+
+     # Vite Config
+     VITE_SEND_DELAY=750 # Send delay in milliseconds
+     VITE_CLIENT_PORT=1337 # Client port
      ```
 
 - **.env.development**:
      ```bash
+     # Vite Config
      VITE_BACKEND_URL="http://localhost:1338"  # API URL for development
      VITE_BASENAME="" # Basename for Router
      VITE_HOMEPAGE_URL="" # Homepage URL
+     VITE_DOMAIN_URL="http://localhost:5000" # Domain URL for frontend app
+
+     # Frontend Config
+     VITE_ENV_MODE="development"
      ```
 
 - **.env.production**:
@@ -55,6 +64,10 @@ SSR-Editor is a real-time web application for creating and editing documents col
      VITE_BACKEND_URL="<your_backend_url>"  # API URL for production
      VITE_BASENAME="~<your_acronym>/editor" # Basename for Router
      VITE_HOMEPAGE_URL="https://www.student.bth.se/~<your_acronym>/editor/" # Homepage URL (BTH's server)
+     VITE_DOMAIN_URL="https://www.student.bth.se/~<your_acronym>/editor/" # Domain URL for frontend app
+
+     # Frontend Config
+     VITE_ENV_MODE="production"
      ```
 
 3. To launch the application in development mode, use:
