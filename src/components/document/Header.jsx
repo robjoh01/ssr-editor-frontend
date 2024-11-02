@@ -33,11 +33,14 @@ import {
     BiChat,
 } from "react-icons/bi"
 
+import { useSnackbar } from "notistack"
+
 function Header({
     title,
-    onTitleChange,
+    setTitle,
     isProcessing,
     documentId,
+    isOwner,
     viewers,
     comments,
     onCommentHighlight,
@@ -46,6 +49,7 @@ function Header({
     socketRef,
 }) {
     const { user } = useAuth()
+    const { enqueueSnackbar } = useSnackbar()
 
     const [unreadCount, setUnreadCount] = useState(0)
 
@@ -105,7 +109,8 @@ function Header({
 
                     <Input
                         value={title}
-                        onChange={onTitleChange}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Untitled"
                         fontWeight="bold"
                         size="md"
                         maxW="xl"
@@ -154,7 +159,20 @@ function Header({
                     <Button
                         leftIcon={<BiSolidShareAlt />}
                         colorScheme="blue"
-                        onClick={shareModal.onOpen}
+                        onClick={() => {
+                            if (!isOwner) {
+                                enqueueSnackbar(
+                                    "Cannot share a document that you don't own",
+                                    {
+                                        variant: "error",
+                                    }
+                                )
+
+                                return
+                            }
+
+                            shareModal.onOpen()
+                        }}
                     >
                         Share
                     </Button>

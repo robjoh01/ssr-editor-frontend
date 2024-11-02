@@ -24,7 +24,7 @@ function App() {
                     <ErrorBoundary
                         FallbackComponent={Error}
                         onReset={(details) => {
-                            navigate("/")
+                            navigate(-1)
                         }}
                     >
                         <PromptProvider>

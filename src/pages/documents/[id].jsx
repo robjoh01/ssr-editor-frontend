@@ -21,17 +21,18 @@ function DocumentPage() {
     const { showBoundary } = useErrorBoundary()
 
     // Document's state
+    const [isOwner, setIsOwner] = useState(false)
     const [title, setTitle] = useState("Untitled Document")
     const [content, setContent] = useState("")
     const [users, setUsers] = useState([])
     const [isProcessing, setIsProcessing] = useState(false)
-    const [isLoading, setIsLoading] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
     const [textRange, setTextRange] = useState({ index: 0, length: 0 })
 
     // Editor's state
     const contentRef = useRef(null)
     const socketRef = useRef(null)
-    const sendTimeoutRef = useRef(null)
+    const saveTimeoutRef = useRef(null)
 
     useEffect(() => {
         if (!user) return
@@ -53,38 +54,36 @@ function DocumentPage() {
         socket.emit("join_room", documentId, user)
 
         socket.once("load_room", async (document) => {
+            contentRef.current?.focus()
+            editor.enable()
+
+            setIsOwner(document.ownerId === user._id)
             setTitle(document.title)
             setContent(document.content)
             setIsLoading(false)
-
-            editor.setContents(document.content)
-            editor.enable()
-
-            contentRef.current?.focus()
         })
 
         socket.on("users_changed", (userList) => {
             setUsers(userList)
         })
 
-        socket.on("save_pending", () => {
+        socket.on("save_incoming", () => {
             editor.disable()
             setIsProcessing(true)
         })
 
-        socket.on("save_success", (content) => {
-            setContent(content)
-            setIsProcessing(false)
-
-            editor.setContents(content)
+        socket.on("save_complete", (data) => {
             editor.enable()
 
-            contentRef.current?.focus()
+            const { title = null, content = null } = data
+
+            if (title) setTitle(title)
+            if (content) setContent(content)
+            setIsProcessing(false)
         })
 
         socket.on("receive_changes", (content) => {
             setContent(content)
-            editor.setContents(content)
         })
 
         editor.on("selection-change", (range) => {
@@ -120,18 +119,15 @@ function DocumentPage() {
     const handleContentChange = (value, delta, source) => {
         if (socketRef.current == null || source !== "user") return
 
-        clearTimeout(sendTimeoutRef.current)
+        const editor = contentRef.current.getEditor()
+        const content = editor.getContents()
+        socketRef.current.emit("send_changes", content)
 
-        sendTimeoutRef.current = setTimeout(() => {
-            const editor = contentRef.current.getEditor()
-            const content = editor.getContents()
+        clearTimeout(saveTimeoutRef.current)
 
-            socketRef.current.emit("send_changes", {
-                title,
-                content,
-            })
-            setContent(content)
-        }, import.meta.env.VITE_SEND_DELAY)
+        saveTimeoutRef.current = setTimeout(() => {
+            socketRef.current.emit("save_changes", { title, content })
+        }, import.meta.env.VITE_SAVE_DELAY)
     }
 
     const handleCommentHighlight = (comment) => {
@@ -155,27 +151,30 @@ function DocumentPage() {
     const commentsQuery = useQuery({
         queryKey: ["comments", documentId],
         queryFn: async () => {
-            return await axios.post("/graphql", {
+            const response = await axios.post("/graphql", {
                 query: `
                 query($id: ID!) {
-                    document(id: $id) {
-                        comments {
-                            id,
-                            position,
-                            content,
-                            user {
+                    myself {
+                        document(id: $id) {
+                            comments {
                                 id,
-                                name,
-                                email
-                            },
-                            createdAt,
-                            updatedAt
+                                position,
+                                content,
+                                user {
+                                    id,
+                                    name,
+                                    email
+                                },
+                                createdAt,
+                                updatedAt
+                            }
                         }
                     }
                 }
             `,
                 variables: { id: documentId },
             })
+            return response.data.data.myself.document.comments
         },
         refetchOnMount: false,
         refetchOnWindowFocus: false,
@@ -184,20 +183,25 @@ function DocumentPage() {
         enabled: false,
     })
 
+    useEffect(() => {
+        const editor = contentRef.current.getEditor()
+        editor.setContents(content)
+
+        contentRef.current?.focus()
+    }, [content])
+
     return (
         <Grid templateRows="auto 1fr 10%" height="full">
             <GridItem>
                 <Skeleton isLoaded={!isLoading}>
                     <Header
                         title={title}
-                        onTitleChange={(e) => setTitle(e.target.value)}
+                        setTitle={setTitle}
                         isProcessing={isProcessing}
                         documentId={documentId}
+                        isOwner={isOwner}
                         viewers={users}
-                        comments={
-                            commentsQuery.data?.data?.data?.document
-                                ?.comments || []
-                        }
+                        comments={commentsQuery.data || []}
                         onCommentHighlight={handleCommentHighlight}
                         onCommentsRefresh={async () =>
                             await commentsQuery.refetch()
@@ -216,7 +220,6 @@ function DocumentPage() {
                 >
                     <TextEditor
                         ref={contentRef}
-                        value={content}
                         onChange={handleContentChange}
                         onChangeSelection={handleSelectionChange}
                     />

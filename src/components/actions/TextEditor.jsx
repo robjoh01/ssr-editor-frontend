@@ -81,14 +81,13 @@ const formats = [
  * @extends {React.ForwardRefExoticComponent<EditorProps & React.RefAttributes<Quill>>}
  */
 const TextEditor = forwardRef(function TextEditor(
-    { value, onChange, onChangeSelection },
+    { onChange, onChangeSelection },
     ref
 ) {
     return (
         <ReactQuill
             ref={ref}
             theme="snow"
-            value={value}
             onChange={onChange}
             onChangeSelection={onChangeSelection}
             modules={modules}
